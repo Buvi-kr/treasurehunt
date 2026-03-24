@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>과학관 특별 이벤트</title>
+    <style>
+        body { 
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            text-align: center; 
+            padding: 50px 20px; 
+            background-color: #f4f7f6; 
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container { 
+            background: white; 
+            padding: 40px 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+            width: 100%;
+            max-width: 400px; 
+        }
+        h1 { color: #2c3e50; font-size: 28px; margin-top: 0; margin-bottom: 15px; }
+        .room-number { font-size: 20px; font-weight: 500; color: #7f8c8d; margin: 30px 0; line-height: 1.5; }
+        .room-number span { font-size: 32px; font-weight: 800; color: #3498db; display: block; margin-top: 10px; }
+        button { 
+            background-color: #3498db; 
+            color: white; 
+            border: none; 
+            padding: 18px 20px; 
+            font-size: 20px; 
+            font-weight: bold;
+            border-radius: 12px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            margin-top: 20px;
+        }
+        button:hover { background-color: #2980b9; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4); }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; box-shadow: none; transform: none; }
+        #result { margin-top: 30px; font-size: 22px; font-weight: bold; line-height: 1.6; min-height: 80px; }
+        .win { color: #e74c3c; animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .lose { color: #95a5a6; animation: fadeIn 0.5s ease forwards; }
+        
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>골든벨 구역 추첨</h1>
+        <div id="room-info" class="room-number">
+            QR 코드를 스캔해 주세요.
+        </div>
+        
+        <button id="check-btn" style="display: none;" onclick="checkResult()">내 구역 당첨 결과 보기</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // 1. URL 파라미터에서 방 번호 읽기 (예: ?room=1)
+        const urlParams = new URLSearchParams(window.location.search);
+        const myRoom = urlParams.get('room');
+
+        const roomInfoDiv = document.getElementById('room-info');
+        const checkBtn = document.getElementById('check-btn');
+
+        // 파라미터가 있으면 화면에 표시하고 버튼 활성화
+        if (myRoom) {
+            roomInfoDiv.innerHTML = `현재 서 계신 구역은<span>${myRoom}번 구역</span>입니다.`;
+            checkBtn.style.display = 'block'; 
+        } else {
+            roomInfoDiv.innerHTML = "잘못된 접근입니다.<br>행사장 내의 공식 QR 코드를<br>다시 스캔해 주세요.";
+        }
+
+        // 2. 구글 시트 웹 게시 CSV 링크 (주신 링크 적용 완료)
+        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSFqGfkrY_Zc2D18Rrk8yTsIcyipv_kPxtc0JTzx-b12qYy0kSFNrgH4VnX-nKkaZHSR7d2OP7_ZO_j/pub?output=csv';
+
+        // 3. 당첨 확인 로직
+        async function checkResult() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = "결과를 확인하는 중입니다...<br>⏳";
+            resultDiv.className = ''; // 기존 애니메이션 초기화
+            checkBtn.disabled = true; 
+
+            try {
+                // 구글 시트 데이터 가져오기 (캐시 방지를 위해 끝에 타임스탬프 추가)
+                const response = await fetch(GOOGLE_SHEET_CSV_URL + '&t=' + new Date().getTime());
+                const data = await response.text();
+
+                // CSV 데이터 파싱 (첫 번째 줄, 첫 번째 칸의 값)
+                // 만약 시트에 '3'이라고 적혀있으면 winningRoom 변수에 '3'이 들어갑니다.
+                const winningRoom = data.trim().split('\n')[0].split(',')[0].trim();
+
+                // 내 구역 번호와 당첨 번호 비교
+                if (myRoom === winningRoom) {
+                    resultDiv.innerHTML = `🎉 축하합니다! 🎉<br>해당 구역이 당첨되었습니다!<br><br><span style="font-size: 16px; font-weight: normal; color: #555;">포우리 부스로 오셔서<br>상품을 받아가세요!</span>`;
+                    resultDiv.className = 'win';
+                } else {
+                    resultDiv.innerHTML = `아쉽게도 이번 회차 당첨 구역은<br>${winningRoom}번 입니다.<br><br><span style="font-size: 16px; font-weight: normal; color: #555;">다음 기회를 노려주세요!</span>`;
+                    resultDiv.className = 'lose';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = "일시적인 통신 오류가 발생했습니다.<br>잠시 후 다시 버튼을 눌러주세요.";
+                console.error("통신 에러:", error);
+                checkBtn.disabled = false; // 에러 시 다시 누를 수 있게 해제
+            }
+        }
+    </script>
+</body>
+</html>

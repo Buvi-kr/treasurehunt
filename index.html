@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>과학관 탐사 프로젝트: 넥서스</title>
+    <title>우주 탐사대: 포우리와 함께</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
@@ -11,412 +11,319 @@
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
         :root {
-            --cyan: #00f3ff;
-            --blue: #0055ff;
-            --bg: #050914;
-            --panel: rgba(0, 40, 80, 0.4);
-            --danger: #ff003c;
-            --success: #00ff66;
+            --space-dark: #0b0d17;
+            --star-gold: #ffd700;
+            --neon-blue: #00e5ff;
+            --panel-bg: rgba(15, 20, 40, 0.7);
         }
 
         body {
             font-family: 'Pretendard', sans-serif;
-            background-color: var(--bg);
+            background-color: var(--space-dark);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(0, 229, 255, 0.1) 0%, transparent 50%);
             color: #fff;
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* 스크롤 방지 */
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background-image: radial-gradient(circle at 50% 0%, #1a2a40 0%, var(--bg) 70%);
+            margin: 0; padding: 0; overflow: hidden; height: 100vh;
+            display: flex; flex-direction: column;
         }
 
         /* --- [메인 UI] --- */
         #main-ui {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            animation: fadeIn 0.5s;
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; animation: fadeIn 0.8s ease-out;
         }
 
         h1 {
-            font-size: 1.8rem;
-            letter-spacing: 5px;
-            color: var(--cyan);
-            text-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
-            margin-bottom: 10px;
-            text-transform: uppercase;
+            font-size: 1.6rem; letter-spacing: 2px; color: var(--neon-blue);
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5); margin-bottom: 5px; text-align: center;
         }
 
-        .subtitle {
-            color: #88aadd;
-            font-size: 0.9rem;
-            letter-spacing: 2px;
-            margin-bottom: 40px;
+        .subtitle { color: #aab; font-size: 0.95rem; margin-bottom: 30px; }
+
+        /* 인벤토리 (도감) UI */
+        .inventory-panel {
+            background: var(--panel-bg); backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 20px;
+            padding: 25px 20px; width: 90%; max-width: 360px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 229, 255, 0.05);
+            margin-bottom: 40px; text-align: center;
         }
 
-        /* 홀로그램 패널 */
-        .status-panel {
-            background: var(--panel);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            border-radius: 20px;
-            padding: 40px 20px;
-            width: 85%;
-            max-width: 350px;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(0, 85, 255, 0.2), inset 0 0 20px rgba(0, 243, 255, 0.05);
-            margin-bottom: 40px;
+        .inventory-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px;
+        }
+        
+        /* 마지막 아이템(포우리)은 가운데 정렬되도록 트릭 */
+        .inventory-grid .item-slot:nth-child(4) { grid-column: 1 / 3; justify-self: right; margin-right: -10px;}
+        .inventory-grid .item-slot:nth-child(5) { grid-column: 2 / 4; justify-self: left; margin-left: -10px;}
+
+        .item-slot {
+            display: flex; flex-direction: column; align-items: center;
+            opacity: 0.4; filter: grayscale(100%); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        #data-count {
-            font-size: 4.5rem;
-            font-weight: 900;
-            margin: 15px 0;
-            color: #fff;
-            text-shadow: 0 0 20px var(--cyan);
-            font-variant-numeric: tabular-nums;
+        .item-slot.active {
+            opacity: 1; filter: grayscale(0%); transform: scale(1.1);
         }
 
-        /* 과학적인 프로그레스 바 */
-        .energy-bar-container {
-            width: 80%;
-            height: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            margin: 0 auto 20px auto;
-            overflow: hidden;
-            position: relative;
+        .item-icon {
+            font-size: 2.5rem; background: rgba(0,0,0,0.5); width: 70px; height: 70px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; border: 2px dashed #555; margin-bottom: 8px;
         }
 
-        #energy-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--blue), var(--cyan));
-            box-shadow: 0 0 10px var(--cyan);
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        .item-slot.active .item-icon {
+            background: rgba(0, 229, 255, 0.1); border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
         }
+
+        /* 특별 아이템(마스코트) 강조 */
+        .item-slot.active.special .item-icon {
+            border-color: var(--star-gold); box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .item-name { font-size: 0.8rem; color: #ccc; word-break: keep-all; font-weight: bold; }
+        .item-slot.active .item-name { color: #fff; text-shadow: 0 0 5px var(--neon-blue); }
+        .item-slot.active.special .item-name { color: var(--star-gold); }
 
         .btn-scan {
-            background: transparent;
-            color: var(--cyan);
-            border: 2px solid var(--cyan);
-            padding: 18px 40px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            letter-spacing: 2px;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-            transition: all 0.2s;
-            text-transform: uppercase;
+            background: linear-gradient(135deg, #0055ff, #00e5ff); color: #fff; border: none;
+            padding: 18px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px;
+            cursor: pointer; box-shadow: 0 5px 20px rgba(0, 229, 255, 0.4);
+            transition: transform 0.2s;
         }
-
-        .btn-scan:active {
-            transform: scale(0.95);
-            background: var(--cyan);
-            color: #000;
-        }
+        .btn-scan:active { transform: scale(0.95); }
 
         /* --- [스캐너 UI] --- */
-        #scanner-ui {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            z-index: 100;
-        }
-
+        #scanner-ui { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; }
         #reader { width: 100%; height: 100vh; }
-
         .scan-target {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 250px; height: 250px;
-            border: 2px solid rgba(0, 243, 255, 0.5);
-            box-shadow: 0 0 0 4000px rgba(0,0,10,0.85); /* 뷰파인더 밖 어둡게 */
-            z-index: 110;
-            pointer-events: none;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 220px; height: 220px; border: 3px solid var(--neon-blue); border-radius: 20px;
+            box-shadow: 0 0 0 4000px rgba(11, 13, 23, 0.9); z-index: 110; pointer-events: none;
         }
+        .scan-target::after { content: '별자리 마커를 스캔하세요'; position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); width: 200px; text-align: center; color: var(--neon-blue); font-weight: bold; }
+        
+        .btn-close { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.15); border: 1px solid #fff; color: white; padding: 12px 30px; border-radius: 30px; z-index: 120; backdrop-filter: blur(5px); }
 
-        /* 십자선 포인트 */
-        .scan-target::before { content: '+'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--cyan); font-size: 20px; opacity: 0.7; }
-
-        /* 스캔 레이저 애니메이션 */
-        .laser {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: var(--cyan);
-            box-shadow: 0 0 15px var(--cyan);
-            animation: scan 2s infinite linear;
-        }
-
-        @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .btn-close {
-            position: absolute;
-            bottom: 40px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white; padding: 12px 30px; border-radius: 30px;
-            z-index: 120; backdrop-filter: blur(5px);
-        }
-
-        /* --- [결과 모달창 (핵심: 턴제 진행)] --- */
-        #result-modal {
-            display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 5, 15, 0.9);
-            z-index: 200;
-            align-items: center; justify-content: center;
-            backdrop-filter: blur(10px);
-        }
-
-        .modal-content {
-            background: rgba(0, 30, 60, 0.8);
-            border: 1px solid var(--cyan);
-            padding: 40px 30px;
-            border-radius: 20px;
-            text-align: center;
-            width: 80%;
-            max-width: 320px;
-            box-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
+        /* --- [결과 모달창] --- */
+        #result-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal-content { background: #151828; border: 2px solid var(--neon-blue); padding: 40px 30px; border-radius: 24px; text-align: center; width: 80%; max-width: 320px; box-shadow: 0 0 40px rgba(0, 229, 255, 0.3); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
-        .modal-icon { font-size: 3rem; margin-bottom: 15px; }
-        .modal-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 10px; color: var(--cyan); }
+        
+        .modal-img { font-size: 4rem; margin-bottom: 10px; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        .modal-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; color: #fff; }
         .modal-desc { color: #aaa; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px; word-break: keep-all; }
+        .btn-confirm { background: var(--neon-blue); color: #000; font-weight: 900; border: none; padding: 15px 0; width: 100%; border-radius: 12px; font-size: 1.1rem; }
 
-        .btn-confirm {
-            background: var(--cyan);
-            color: #000; font-weight: bold; border: none;
-            padding: 15px 0; width: 100%; border-radius: 12px; font-size: 1.1rem;
-        }
+        .reset-text { position: fixed; bottom: 15px; color: #555; font-size: 11px; text-decoration: underline; cursor: pointer; }
 
-        /* 초기화 버튼 (눈에 띄지 않게 하단 배치) */
-        .reset-text { position: fixed; bottom: 15px; color: #444; font-size: 12px; text-decoration: underline; cursor: pointer; }
-
-        /* 최종 당첨 화면 강제 덮어쓰기 */
-        body.cleared { background: #000; animation: disco 2s infinite; }
-        @keyframes disco { 0% { box-shadow: inset 0 0 100px rgba(0,255,100,0.2); } 50% { box-shadow: inset 0 0 100px rgba(0,200,255,0.4); } 100% { box-shadow: inset 0 0 100px rgba(0,255,100,0.2); } }
+        /* 클리어 효과 */
+        body.cleared { background: #000; }
     </style>
 </head>
 <body>
 
     <div id="main-ui">
-        <h1>NEXUS RADAR</h1>
-        <div class="subtitle">에너지 코어 탐지 시스템</div>
+        <h1>탐사 지원 시스템</h1>
+        <div class="subtitle">모든 탐험 장비를 수집하세요</div>
 
-        <div class="status-panel">
-            <p style="margin: 0; color: #7799cc; font-size: 12px; letter-spacing: 2px;">수집된 에너지 코어</p>
-            <div id="data-count">0<span style="font-size: 2rem; color: #5577aa;">/7</span></div>
+        <div class="inventory-panel">
+            <p style="margin: 0; color: #8899aa; font-size: 13px;">현재 장착된 장비 <span id="item-count" style="color:var(--neon-blue); font-weight:bold;">0/5</span></p>
             
-            <div class="energy-bar-container">
-                <div id="energy-bar"></div>
-            </div>
-            
-            <p id="system-msg" style="color: #aaa; font-size: 0.9rem; margin-top: 10px;">스캐너를 가동하여 주변의<br>QR 마커를 스캔하십시오.</p>
+            <div class="inventory-grid" id="inventory-grid">
+                </div>
         </div>
 
-        <button class="btn-scan" id="start-btn" onclick="startScanner()">SCAN START</button>
-        <div class="reset-text" onclick="resetGame()">시스템 초기화</div>
+        <button class="btn-scan" id="start-btn" onclick="startScanner()">🚀 스캐너 렌즈 개방</button>
+        <div class="reset-text" onclick="resetGame()">[진행자 전용] 데이터 초기화</div>
     </div>
 
     <div id="scanner-ui">
         <div id="reader"></div>
-        <div class="scan-target"><div class="laser"></div></div>
-        <button class="btn-close" onclick="stopScanner()">스캔 취소</button>
+        <div class="scan-target"></div>
+        <button class="btn-close" onclick="stopScanner()">취소</button>
     </div>
 
     <div id="result-modal">
         <div class="modal-content">
-            <div id="modal-icon" class="modal-icon">🔍</div>
-            <div id="modal-title" class="modal-title">데이터 분석 중</div>
-            <div id="modal-desc" class="modal-desc">결과를 확인합니다.</div>
-            <button class="btn-confirm" onclick="closeModal()">확인</button>
+            <div id="modal-img" class="modal-img">🎒</div>
+            <div id="modal-title" class="modal-title">탐험 배낭 획득!</div>
+            <div id="modal-desc" class="modal-desc">이제 물건을 담을 수 있습니다.</div>
+            <button class="btn-confirm" onclick="closeModal()">가방에 넣기</button>
         </div>
     </div>
 
     <script>
-        // --- 설정 ---
-        const TOTAL_BOXES = 7;
-        const GUARANTEE_COUNT = 5; // 5개부터 100% 당첨
-        const LOW_PROBABILITY = 0.05; // 초반 5% 확률
+        // 🌟 도감 아이템 데이터 (순서대로 획득하거나 랜덤 획득 가능)
+        const MASTER_ITEMS = [
+            { id: 'bag', name: '우주 배낭', icon: '🎒', desc: '튼튼한 우주 탐험용 배낭을 찾았습니다!' },
+            { id: 'telescope', name: '천체 망원경', icon: '🔭', desc: '머나먼 성단을 관측할 수 있는 망원경입니다.' },
+            { id: 'map', name: '별자리 지도', icon: '🗺️', desc: '길을 잃지 않도록 도와줄 홀로그램 지도입니다.' },
+            { id: 'hat', name: '탐험가 모자', icon: '🧢', desc: '우주 방사선을 막아주는 특수 모자입니다.' },
+            { id: 'pouri', name: '마스코트 포우리', icon: '👽', desc: '천문과학관의 마스코트 포우리가 합류했습니다!', special: true }
+        ];
 
         let html5QrScanner = null;
         let isProcessing = false;
 
-        // 초기화 (페이지 로드)
-        window.onload = () => { updateUI(); };
+        window.onload = () => { initInventory(); updateUI(); };
 
-        // 스마트폰 햅틱(진동) 피드백 함수
         function hapticFeedback(type) {
             if (!navigator.vibrate) return;
-            switch(type) {
-                case 'error': navigator.vibrate([100, 50, 100]); break; // 짧게 두번
-                case 'warn': navigator.vibrate(200); break; // 묵직하게 한번
-                case 'success': navigator.vibrate([100, 50, 200]); break; // 띠-딩!
-                case 'jackpot': navigator.vibrate([300, 100, 300, 100, 500, 200, 1000]); break; // 진동 폭발
-            }
+            if (type === 'error') navigator.vibrate([100, 50, 100]);
+            if (type === 'item') navigator.vibrate([100, 50, 200]);
+            if (type === 'clear') navigator.vibrate([300, 100, 300, 100, 500, 200, 1000]);
         }
 
-        // 스캐너 가동
+        // 도감 UI 초기 렌더링
+        function initInventory() {
+            const grid = document.getElementById('inventory-grid');
+            MASTER_ITEMS.forEach(item => {
+                const slot = document.createElement('div');
+                slot.className = `item-slot ${item.special ? 'special' : ''}`;
+                slot.id = `slot-${item.id}`;
+                slot.innerHTML = `
+                    <div class="item-icon">${item.icon}</div>
+                    <div class="item-name">${item.name}</div>
+                `;
+                grid.appendChild(slot);
+            });
+        }
+
         function startScanner() {
             document.getElementById('main-ui').style.display = 'none';
             document.getElementById('scanner-ui').style.display = 'block';
 
             html5QrScanner = new Html5Qrcode("reader");
-            
-            const config = { 
-                fps: 20, 
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: window.innerHeight / window.innerWidth // 풀스크린 꽉 차게
-            };
-
-            html5QrScanner.start({ facingMode: "environment" }, config, onScanSuccess)
-            .catch(err => {
-                alert("카메라 접근 권한이 필요합니다.");
-                stopScanner();
-            });
+            html5QrScanner.start(
+                { facingMode: "environment" },
+                { fps: 15, qrbox: { width: 220, height: 220 }, aspectRatio: window.innerHeight / window.innerWidth },
+                onScanSuccess
+            ).catch(err => { alert("카메라 접근 권한이 필요합니다."); stopScanner(); });
         }
 
-        // 스캐너 중지
         function stopScanner() {
             if (html5QrScanner) {
-                html5QrScanner.stop().then(() => {
-                    html5QrScanner.clear();
-                    html5QrScanner = null;
-                }).catch(e => console.log(e));
+                html5QrScanner.stop().then(() => { html5QrScanner.clear(); html5QrScanner = null; });
             }
             document.getElementById('scanner-ui').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
             isProcessing = false;
         }
 
-        // 🌟 [핵심] 스캔 성공 이벤트
         function onScanSuccess(decodedText) {
             if (isProcessing) return; 
-            isProcessing = true; // 무한 반복 방지 락(Lock)
-
-            // 즉시 카메라 끄기 (화면을 일시정지하는 효과 + 배터리 절약)
+            isProcessing = true;
+            
             if (html5QrScanner) {
                 html5QrScanner.stop().then(() => { html5QrScanner.clear(); html5QrScanner = null; });
             }
             document.getElementById('scanner-ui').style.display = 'none';
             
-            // 데이터 처리 로직 호출
-            processScanData(decodedText);
+            processGameLogic(decodedText);
         }
 
-        // 데이터 처리 및 모달 호출
-        function processScanData(code) {
-            let foundBoxes = JSON.parse(localStorage.getItem('found_boxes') || '[]');
-            let title = "", desc = "", icon = "", vibe = "";
+        function processGameLogic(code) {
+            let scannedBoxes = JSON.parse(localStorage.getItem('scanned_boxes') || '[]');
+            let myItems = JSON.parse(localStorage.getItem('my_items') || '[]');
 
-            // 1. 유효성 검사
+            // 1. 유효하지 않은 코드 방어 (기획에 맞게 BOX_ 어쩌구 하는 코드들)
             if (!code.startsWith('BOX_')) {
-                vibe = 'error'; icon = "❌"; title = "오류: 미확인 객체"; desc = "등록되지 않은 QR 마커입니다.";
-                showModal(icon, title, desc, vibe);
+                showModal('❌', '접근 거부', '과학관의 공식 마커가 아닙니다.', 'error');
                 return;
             }
 
-            // 2. 중복 검사
-            if (foundBoxes.includes(code)) {
-                vibe = 'warn'; icon = "⚠️"; title = "중복 스캔"; desc = "이미 코어를 추출한 구역입니다.<br>다른 구역을 수색하십시오.";
-                showModal(icon, title, desc, vibe);
+            // 2. 이미 찍은 QR 코드 방어
+            if (scannedBoxes.includes(code)) {
+                showModal('⚠️', '중복 스캔', '이 구역의 장비는 이미 회수했습니다.<br>다른 곳을 탐색하세요.', 'error');
                 return;
             }
 
-            // 3. 정상 스캔 처리
-            foundBoxes.push(code);
-            localStorage.setItem('found_boxes', JSON.stringify(foundBoxes));
-            const count = foundBoxes.length;
+            // 3. 새로운 QR 스캔 성공 -> 아이템 드롭 로직
+            scannedBoxes.push(code);
+            localStorage.setItem('scanned_boxes', JSON.stringify(scannedBoxes));
 
-            const boxNum = code.replace('BOX_', '');
-            const isWin = (count >= GUARANTEE_COUNT) || (Math.random() < LOW_PROBABILITY);
+            // 내가 아직 안 가진 아이템만 필터링
+            const availableItems = MASTER_ITEMS.filter(item => !myItems.some(my => my.id === item.id));
+            
+            // 만약 다 찾았다면 (예외 처리)
+            if (availableItems.length === 0) {
+                showModal('✨', '탐색 완료', '모든 장비를 찾았습니다!', 'clear');
+                return;
+            }
 
-            if (isWin) {
-                // 당첨
+            // 순서대로 주거나, 랜덤으로 주거나. (여기서는 랜덤 드롭 방식 사용)
+            const droppedItem = availableItems[Math.floor(Math.random() * availableItems.length)];
+            
+            myItems.push(droppedItem);
+            localStorage.setItem('my_items', JSON.stringify(myItems));
+
+            // 모달 띄우기
+            const isLast = myItems.length === MASTER_ITEMS.length;
+            showModal(
+                droppedItem.icon, 
+                `${droppedItem.name} 획득!`, 
+                droppedItem.desc + (isLast ? "<br><br><b style='color:#ffd700;'>🎉 모든 장비를 모았습니다! 🎉</b>" : ""), 
+                isLast ? 'clear' : 'item'
+            );
+
+            if (isLast) {
                 localStorage.setItem('game_cleared', 'true');
-                vibe = 'jackpot'; icon = "💎"; 
-                title = "오메가 코어 발견!"; 
-                desc = `구역 [${boxNum}]에서 <b>최종 보물</b>을 찾았습니다!<br>진행 요원에게 화면을 보여주세요.`;
-                
-                // 파티클 터뜨리기 (사이버펑크 느낌)
-                const duration = 3000; const end = Date.now() + duration;
-                (function frame() {
-                    confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#00f3ff', '#ffffff'] });
-                    confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#00f3ff', '#ffffff'] });
-                    if (Date.now() < end) requestAnimationFrame(frame);
-                }());
-
-            } else {
-                // 꽝 (수집만 됨)
-                vibe = 'success'; icon = "🔋"; 
-                title = "일반 코어 추출 완료"; 
-                desc = `구역 [${boxNum}]의 데이터를 수집했습니다.<br>아직 특별한 반응은 없습니다. (${count}/${TOTAL_BOXES})`;
+                fireConfetti();
             }
-
-            showModal(icon, title, desc, vibe);
         }
 
-        // 모달 띄우기
         function showModal(icon, title, desc, vibeType) {
             hapticFeedback(vibeType);
-            
-            document.getElementById('modal-icon').innerText = icon;
+            document.getElementById('modal-img').innerText = icon;
             document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-title').style.color = (vibeType === 'error' || vibeType === 'warn') ? 'var(--danger)' : 'var(--cyan)';
+            document.getElementById('modal-title').style.color = (vibeType === 'error') ? '#ff4444' : (vibeType === 'clear' ? '#ffd700' : '#00e5ff');
             document.getElementById('modal-desc').innerHTML = desc;
             
             document.getElementById('result-modal').style.display = 'flex';
         }
 
-        // 모달 닫기 (유저가 직접 '확인'을 눌러야 메인으로 복귀)
         function closeModal() {
             document.getElementById('result-modal').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
-            isProcessing = false; // 락 해제
-            updateUI(); // 최신 상태 반영
+            isProcessing = false;
+            updateUI();
         }
 
-        // 메인 화면 UI 업데이트
         function updateUI() {
-            const foundBoxes = JSON.parse(localStorage.getItem('found_boxes') || '[]');
-            const count = foundBoxes.length;
-            const isCleared = localStorage.getItem('game_cleared') === 'true';
+            const myItems = JSON.parse(localStorage.getItem('my_items') || '[]');
+            document.getElementById('item-count').innerText = `${myItems.length}/5`;
 
-            // 숫자 업데이트
-            document.getElementById('data-count').innerHTML = `${count}<span style="font-size: 2rem; color: #5577aa;">/${TOTAL_BOXES}</span>`;
-            
-            // 게이지 바 애니메이션 업데이트
-            const percent = (count / TOTAL_BOXES) * 100;
-            document.getElementById('energy-bar').style.width = `${percent}%`;
+            // 도감 활성화 애니메이션
+            myItems.forEach(item => {
+                const slot = document.getElementById(`slot-${item.id}`);
+                if (slot && !slot.classList.contains('active')) {
+                    // 약간의 딜레이를 주어 UI가 뜰 때 촥 켜지는 느낌
+                    setTimeout(() => slot.classList.add('active'), 100);
+                }
+            });
 
-            // 게임 클리어 시 UI 변경
-            if (isCleared) {
-                document.body.classList.add('cleared');
+            // 올클리어 시 UI 변경
+            if (localStorage.getItem('game_cleared') === 'true') {
                 document.getElementById('start-btn').style.display = 'none';
-                document.getElementById('system-msg').innerHTML = "<b style='color:#00ff66;'>모든 미션을 완수했습니다!<br>본부로 귀환하십시오.</b>";
-                document.getElementById('data-count').style.color = "var(--success)";
-                document.getElementById('data-count').style.textShadow = "0 0 20px var(--success)";
-                document.getElementById('energy-bar').style.background = "var(--success)";
-                document.getElementById('energy-bar').style.boxShadow = "0 0 15px var(--success)";
+                document.querySelector('.subtitle').innerHTML = "<b style='color:#ffd700;'>완벽한 탐험 준비가 끝났습니다! 안내데스크로 오세요.</b>";
+                document.body.classList.add('cleared');
             }
         }
 
-        // 완전 초기화 (숨겨둔 버튼)
+        function fireConfetti() {
+            const duration = 3000; const end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#00e5ff', '#ffd700', '#ffffff'] });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#00e5ff', '#ffd700', '#ffffff'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
         function resetGame() {
-            if(confirm("시스템 메모리를 포맷하시겠습니까? (모든 기록 삭제)")) {
+            if(confirm("모든 수집 데이터를 초기화합니다.")) {
                 localStorage.clear();
                 location.reload();
             }

@@ -3,317 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>📱 현장 보물찾기 통합 테스트 앱</title>
+    <title>TREASURE HUNTER PRO</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
-        body { font-family: 'Pretendard', sans-serif; text-align: center; background: #121212; color: #fff; margin: 0; padding: 20px; padding-bottom: 250px; /* 테스트 패널 공간 */ overflow-x: hidden; }
-        #main-ui { display: block; animation: fadeIn 0.5s; }
-        #scanner-ui { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; }
-        
-        #reader { width: 100%; max-width: 400px; margin: 40px auto; border: 4px solid #4caf50; border-radius: 15px; overflow: hidden; }
-        
-        h1 { color: #4caf50; letter-spacing: 2px; margin-bottom: 5px; }
-        
-        .btn { padding: 15px 30px; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 12px; margin: 10px; transition: transform 0.1s, background 0.2s; }
-        .btn:active { transform: scale(0.95); }
-        .btn-scan { background-color: #4caf50; color: #121212; width: 80%; max-width: 300px; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4); }
-        .btn-close { background-color: #f44336; color: white; position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); }
-        .btn-util { background-color: #333; color: #aaa; font-size: 14px; padding: 10px 20px; margin-top: 30px;}
-        
-        .status-box { background: #1e1e1e; padding: 30px 20px; border-radius: 15px; margin: 20px auto; max-width: 350px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #333; }
-        #found-count { font-size: 3.5em; color: #ffd700; font-weight: 900; margin: 10px 0; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
-        #message { margin-top: 15px; font-size: 1.1em; color: #bbb; min-height: 2em; word-break: keep-all; padding: 0 10px; }
+        :root {
+            --primary: #00ff88;
+            --accent: #bc13fe;
+            --bg: #0a0a0c;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text: #e0e0e0;
+        }
 
-        /* ------------------------------------------- */
-        /* [테스트 패널 스타일 - 하단 고정] */
-        #test-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: #222; border-top: 2px solid #444; padding: 15px; box-sizing: border-box; z-index: 900; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
-        #test-panel h3 { margin: 0 0 10px 0; color: #ff9800; font-size: 16px; }
-        .test-btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
-        .btn-test { padding: 8px 12px; font-size: 12px; background: #444; color: #fff; border-radius: 6px; margin: 0; }
-        .btn-test:hover { background: #555; }
-        .btn-test.active { background: #ff9800; color: #fff; }
-        
-        /* QR 코드가 뜰 팝업창 */
-        #qr-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 15px; z-index: 2000; box-shadow: 0 0 50px rgba(0,0,0,0.8); text-align: center; }
-        #qr-popup-code-name { color: #000; font-weight: bold; margin-bottom: 10px; font-size: 18px; }
-        #qr-popup-close { display:block; margin-top: 15px; font-size: 14px; color: #888; text-decoration: underline; background:none; border:none; cursor:pointer; width:100%;}
-        #qrcode img { margin: 0 auto; } /* QR 중앙 정렬 */
-        /* ------------------------------------------- */
+        body {
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* 스크롤 방지 */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* 메인 컨테이너 */
+        #app-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            letter-spacing: 4px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+
+        /* 상태 박스 */
+        .status-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 30px 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            margin-bottom: 40px;
+        }
+
+        #found-count {
+            font-size: 4rem;
+            font-weight: 800;
+            margin: 10px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        #message {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #aaa;
+            min-height: 3em;
+        }
+
+        /* 스캔 버튼 */
+        .btn-main {
+            background: linear-gradient(45deg, var(--primary), #00d4ff);
+            color: #000;
+            border: none;
+            padding: 18px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 255, 136, 0.3);
+            transition: 0.3s;
+        }
+
+        .btn-main:active { transform: scale(0.95); }
+
+        /* 스캐너 오버레이 (핵심 변경사항) */
+        #scanner-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 100;
+        }
+
+        #reader {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 스캔 화면 가이드 UI */
+        .scan-guide {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px; height: 250px;
+            border: 2px solid var(--primary);
+            border-radius: 30px;
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.6);
+            z-index: 110;
+            pointer-events: none;
+        }
+
+        .scan-guide::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+            animation: scanMove 2s infinite linear;
+        }
+
+        @keyframes scanMove {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+
+        .btn-close-scan {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            z-index: 120;
+            backdrop-filter: blur(5px);
+        }
+
+        /* 유틸리티 */
+        .utils { position: fixed; bottom: 20px; display: flex; gap: 10px; opacity: 0.5; }
+        .btn-util { background: none; border: 1px solid #444; color: #888; padding: 5px 10px; border-radius: 5px; font-size: 11px; }
+
+        .success-text { color: var(--primary) !important; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="main-ui">
-        <h1>📦 보물 탐지기 📦</h1>
-        <p style="color:#666; font-size:12px; margin:0;">Pure Frontend Version (No DB)</p>
-        
-        <div class="status-box">
-            <p style="margin: 0; color: #888;">현재 해제한 보물상자</p>
+    <div id="app-container">
+        <h1>TREASURE RADAR</h1>
+
+        <div class="status-card">
+            <div class="progress-dots" id="dots-container">
+                </div>
+            <p style="margin: 0; color: #888; font-size: 12px; letter-spacing: 1px;">COLLECTED BOXES</p>
             <div id="found-count">0 / 7</div>
-            <p id="message">탐지기를 켜고 주변의 암호(QR)를 스캔하세요!</p>
+            <div id="message">주변의 QR 보안 코드를 스캔하여<br>숨겨진 보물을 찾으세요.</div>
         </div>
-        
-        <button class="btn btn-scan" onclick="startScanner()">📷 탐지기 가동 (스캔)</button>
-        
-        <br>
-        <button class="btn btn-util" onclick="loadSaveCode()">🔄 상태 복구</button>
-        <button class="btn btn-util" style="background: #500; color:#fff;" onclick="resetGame()">초기화</button>
+
+        <button class="btn-main" id="start-btn" onclick="openScanner()">📷 탐지 스캐너 가동</button>
+
+        <div class="utils">
+            <button class="btn-util" onclick="resetGame()">RESET</button>
+            <button class="btn-util" onclick="exportData()">BACKUP</button>
+        </div>
     </div>
 
-    <div id="scanner-ui">
-        <h2 style="color:#4caf50; margin-top: 30px;">[ 보안 코드 스캔 중 ]</h2>
+    <div id="scanner-overlay">
         <div id="reader"></div>
-        <button class="btn btn-close" onclick="stopScanner()">취소</button>
+        <div class="scan-guide"></div>
+        <button class="btn-close-scan" onclick="closeScanner()">닫기</button>
     </div>
 
-
-    <div id="test-panel">
-        <h3>🛠️ 통합 테스트 패널 (현장 배포시 제거)</h3>
-        <p style="color:#aaa; font-size:11px; margin:-5px 0 10px 0;">버튼을 누르면 스캔할 QR코드가 화면에 뜹니다.</p>
-        <div class="test-btn-group">
-            <button class="btn btn-test" onclick="generateTestQR('BOX_01', this)">상자 1</button>
-            <button class="btn btn-test" onclick="generateTestQR('BOX_02', this)">상자 2</button>
-            <button class="btn btn-test" onclick="generateTestQR('BOX_03', this)">상자 3</button>
-            <button class="btn btn-test" onclick="generateTestQR('BOX_04', this)">상자 4</button>
-            <button class="btn btn-test" onclick="generateTestQR('BOX_05', this)">상자 5</button>
-            <button class="btn btn-test" onclick="generateTestQR('BOX_06', this)">상자 6</button>
-            <button class="btn btn-test" onclick="generateTestQR('BOX_07', this)">상자 7</button>
-            <button class="btn btn-test" style="background:#f44336;" onclick="closeQRPopup()">QR 닫기</button>
-        </div>
-    </div>
-
-    <div id="qr-popup">
-        <div id="qr-popup-code-name"></div>
-        <div id="qrcode"></div> <button id="qr-popup-close" onclick="closeQRPopup()">[ 팝업 닫기 ]</button>
-    </div>
     <script>
-        // --- [설정 값] 현장 이벤트 기획에 맞춰 수정하세요 ---
-        const TOTAL_BOXES = 7; // 총 보물상자 수
-        const GUARANTEE_COUNT = 5; // 몇 개째 스캔부터 당첨 폭주? (5개째부터 100%)
-        const LOW_PROBABILITY = 0.005; // 초반 당첨 확률 (0.5%)
+        const TOTAL_BOXES = 7;
+        const GUARANTEE_COUNT = 5;
+        const LOW_PROBABILITY = 0.01;
 
-        let html5QrScanner = null;
-        let isProcessing = false; // 중복 스캔 방지
+        let scanner = null;
+        let isProcessing = false;
+        let isScannerInitialized = false;
 
-        // 페이지 로드 시 상태 반영
-        window.onload = function() {
+        window.onload = () => {
+            initDots();
             updateUI();
         };
 
-        // UI 업데이트 (숫자, 메시지, 당첨 연출)
-        function updateUI() {
-            const foundBoxes = JSON.parse(localStorage.getItem('found_boxes') || '[]');
-            document.getElementById('found-count').innerText = `${foundBoxes.length} / ${TOTAL_BOXES}`;
-            
-            // 이미 최종 클리어한 상태라면
-            if (localStorage.getItem('game_cleared') === 'true') {
-                document.getElementById('message').innerText = "🎉 축하합니다! 최종 보물을 발견했습니다! 상품을 수령하세요! 🎉";
-                document.getElementById('message').style.color = "#4caf50";
-                document.querySelector('.btn-scan').style.display = 'none'; // 스캔 버튼 숨김
-                document.getElementById('found-count').style.color = "#4caf50";
+        function initDots() {
+            const container = document.getElementById('dots-container');
+            for(let i=0; i<TOTAL_BOXES; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                container.appendChild(dot);
             }
         }
 
-        // 스마트폰 진동 피드백
-        function triggerVibration(pattern) {
-            if (navigator.vibrate) {
-                navigator.vibrate(pattern);
+        // 스캐너 열기 (최초 1회만 권한 요청 및 시작)
+        async function openScanner() {
+            document.getElementById('scanner-overlay').style.display = 'block';
+            
+            if (!isScannerInitialized) {
+                scanner = new Html5Qrcode("reader");
+                const config = { fps: 20, qrbox: { width: 250, height: 250 } };
+                
+                try {
+                    await scanner.start({ facingMode: "environment" }, config, onScanSuccess);
+                    isScannerInitialized = true;
+                } catch (err) {
+                    alert("카메라 권한이 필요합니다.");
+                    closeScanner();
+                }
+            } else {
+                // 이미 초기화된 경우 비디오를 다시 그리기 시작 (라이브러리 내부적 처리)
+                // 만약 라이브러리가 멈춰있다면 resume()을 호출할 수 있으나 
+                // 여기서는 레이어 제어만으로도 충분히 빠릅니다.
             }
         }
 
-        // 스캔 시작 (카메라 ON)
-        function startScanner() {
-            // 다른 팝업 다 닫기
-            closeQRPopup();
-            
-            document.getElementById('main-ui').style.display = 'none';
-            document.getElementById('scanner-ui').style.display = 'block';
-
-            html5QrScanner = new Html5Qrcode("reader");
-            
-            // 현장 스캔 최적화 구성
-            const config = { 
-                fps: 15, // 초당 프레임 수
-                qrbox: { width: 250, height: 250 }, // 스캔 인식 영역
-                aspectRatio: 1.0 // 1:1 비율
-            };
-
-            // 후면 카메라로 시작
-            html5QrScanner.start(
-                { facingMode: "environment" },
-                config,
-                onScanSuccess
-            ).catch(err => {
-                alert("카메라 권한이 거부되었거나 지원하지 않는 브라우저입니다.");
-                stopScanner();
-            });
+        function closeScanner() {
+            document.getElementById('scanner-overlay').style.display = 'none';
         }
 
-        // 스캔 종료 (카메라 OFF)
-        function stopScanner() {
-            if (html5QrScanner) {
-                html5QrScanner.stop().then(() => {
-                    document.getElementById('main-ui').style.display = 'block';
-                    document.getElementById('scanner-ui').style.display = 'none';
-                    html5QrScanner = null;
-                }).catch(err => console.error("카메라 종료 실패", err));
-            }
-        }
-
-        // 🌟 [핵심] 스캔 성공 시 실행되는 게임 로직
-        function onScanSuccess(decodedText, decodedResult) {
-            if (isProcessing) return; // 처리 중이면 무시
+        function onScanSuccess(decodedText) {
+            if (isProcessing) return;
             isProcessing = true;
-            
-            // 즉시 카메라 화면 닫기 (찰칵! 느낌 연출)
-            stopScanner(); 
 
+            // 스캔 성공 시 즉시 레이어 닫기 (피드백 속도 향상)
+            closeScanner();
+            
+            // 진동 피드백
+            if(navigator.vibrate) navigator.vibrate(100);
+
+            handleGameLogic(decodedText);
+
+            setTimeout(() => { isProcessing = false; }, 2000);
+        }
+
+        function handleGameLogic(code) {
             let foundBoxes = JSON.parse(localStorage.getItem('found_boxes') || '[]');
             const msgEl = document.getElementById('message');
 
-            // 1. 이미 클리어한 게임이면 무시
-            if (localStorage.getItem('game_cleared') === 'true') {
-                isProcessing = false; return;
-            }
-
-            // 2. [검증] 유효한 보물코드 형식인지 확인 (기획한 대로 'BOX_'로 시작하는지)
-            if (!decodedText.startsWith('BOX_')) {
-                triggerVibration([200, 100, 200]); // 에러 진동
-                msgEl.innerHTML = `❌ 오류: 유효한 보안 코드가 아닙니다.<br><span style="font-size:0.8em; color:#666;">스캔된 내용: ${decodedText}</span>`;
-                msgEl.style.color = "#f44336";
-                setTimeout(()=> isProcessing = false, 1500); // 1.5초 후 다시 스캔 가능하게
+            if (!code.startsWith('BOX_')) {
+                msgEl.innerText = "❌ 잘못된 코드입니다.";
                 return;
             }
 
-            // 3. [검증] 이미 스캔한 상자인지 확인 (localStorage 비교)
-            if (foundBoxes.includes(decodedText)) {
-                triggerVibration([100]); // 짧은 경고 진동
-                msgEl.innerText = "⚠️ 이미 암호를 해제한 상자입니다. 다른 상자를 찾으세요.";
-                msgEl.style.color = "#ffd700";
-                setTimeout(()=> isProcessing = false, 1500);
+            if (foundBoxes.includes(code)) {
+                msgEl.innerText = "⚠️ 이미 탐지된 상자입니다.";
                 return;
             }
 
-            // 4. [진행] 새로운 상자 처리
-            foundBoxes.push(decodedText);
+            foundBoxes.push(code);
             localStorage.setItem('found_boxes', JSON.stringify(foundBoxes));
+            
             const currentCount = foundBoxes.length;
-            
-            // --- 확률 굴리기 ---
-            // 제안하신 로직: N개(5개)부터 확률 100% 부스트, 그전엔 0.5%
-            let winProbability = (currentCount >= GUARANTEE_COUNT) ? 1.0 : LOW_PROBABILITY;
-            const roll = Math.random(); // 0.0 ~ 1.0 난수 생성
+            const isWin = (currentCount >= GUARANTEE_COUNT) || (Math.random() < LOW_PROBABILITY);
 
-            if (roll < winProbability) {
-                // 🏆 최종 당첨! 🏆
+            if (isWin) {
                 localStorage.setItem('game_cleared', 'true');
-                triggerVibration([100, 50, 100, 50, 100, 50, 500]); // 승리 진동 패턴
-                
-                // 폭죽 이펙트 (Confetti) 발사
-                confetti({
-                    particleCount: 200,
-                    spread: 80,
-                    origin: { y: 0.6 },
-                    colors: ['#4caf50', '#ffd700', '#ffffff', '#2196f3']
-                });
-                
-                const boxNum = decodedText.replace('BOX_',''); // '01'만 추출
-                msgEl.innerText = `[${boxNum}번 상자] 암호 해제 성공! 내부에 특급 보물이 있습니다!!!`;
-                msgEl.style.color = "#4caf50";
-                
-                // 팁: 여기서 당첨자용 사운드 API를 추가하면 더 좋습니다 (오디오 파일 필요)
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                msgEl.innerHTML = "<span class='success-text'>🎊 최종 보물 발견! 상품을 수령하세요! 🎊</span>";
             } else {
-                // 👻 꽝 (상자만 누적됨)
-                triggerVibration([300]); // 묵직한 단일 진동
-                const boxNum = decodedText.replace('BOX_','');
-                msgEl.innerText = `[${boxNum}번 상자] 해제 완료. 아쉽게도 비어있습니다. (누적: ${currentCount}개)`;
-                msgEl.style.color = "#aaa";
+                msgEl.innerText = `[${code.replace('BOX_','')}번 상자] 비어있습니다. (${currentCount}/${TOTAL_BOXES})`;
             }
 
-            updateUI(); // 숫자 및 버튼 상태 업데이트
-            
-            // 스캔 처리 완료 플래그 해제
-            setTimeout(()=> isProcessing = false, 1500);
+            updateUI();
         }
 
-        // =========================================
-        // [테스트 기능 자바스크립트]
-        // =========================================
-        
-        // 1. 화면에 테스트용 QR 팝업을 띄우는 함수
-        function generateTestQR(text, btnEl) {
-            // 다른 열린 팝업이나 카메라 닫기
-            if (html5QrScanner) stopScanner();
+        function updateUI() {
+            const foundBoxes = JSON.parse(localStorage.getItem('found_boxes') || '[]');
+            const count = foundBoxes.length;
             
-            // 버튼 상태 표시
-            const btns = document.querySelectorAll('.btn-test');
-            btns.forEach(b => b.classList.remove('active'));
-            if(btnEl) btnEl.classList.add('active');
-
-            // 팝업 요소 가져오기
-            const popup = document.getElementById('qr-popup');
-            const qrDiv = document.getElementById('qrcode');
-            const nameEl = document.getElementById('qr-popup-code-name');
-
-            // 기존 QR 초기화
-            qrDiv.innerHTML = ""; 
-            nameEl.innerText = `코드 내용: ${text}`;
-            popup.style.display = 'block';
-
-            // QRCode.js 라이브러리를 이용해 QR 생성
-            new QRCode(qrDiv, {
-                text: text, // QR에 담길 내용
-                width: 180,
-                height: 180,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H // 오류 복원 레벨 최상
+            document.getElementById('found-count').innerText = `${count} / ${TOTAL_BOXES}`;
+            
+            // 점 업데이트
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, idx) => {
+                if (idx < count) dot.classList.add('active');
             });
-        }
 
-        // 2. QR 팝업 닫기
-        function closeQRPopup() {
-            document.getElementById('qr-popup').style.display = 'none';
-            const btns = document.querySelectorAll('.btn-test');
-            btns.forEach(b => b.classList.remove('active'));
-        }
-        // =========================================
-
-        // [안전장치] 상태 복구 기능
-        function loadSaveCode() {
-            const input = prompt("상태 복구 코드를 붙여넣으세요.\n(코드가 없다면 그냥 확인을 눌러 현재 코드를 백업하세요.)");
-            if (input === "") {
-                const currentData = localStorage.getItem('found_boxes');
-                if(currentData && currentData !== '[]') {
-                    const saveCode = btoa(currentData);
-                    alert(`현재 복구 코드:\n\n${saveCode}`);
-                } else { alert("저장된 기록이 없습니다."); }
-                return;
-            }
-            if (input) {
-                try {
-                    const decoded = atob(input);
-                    const parsed = JSON.parse(decoded);
-                    if(Array.isArray(parsed)) {
-                        localStorage.setItem('found_boxes', decoded);
-                        alert("복구되었습니다!");
-                        updateUI();
-                    }
-                } catch(e) { alert("잘못된 코드입니다."); }
+            if (localStorage.getItem('game_cleared') === 'true') {
+                document.getElementById('start-btn').style.display = 'none';
+                document.getElementById('found-count').style.color = 'var(--primary)';
             }
         }
 
-        // 테스트용 데이터 초기화
         function resetGame() {
-            if(confirm("모든 데이터를 지우고 처음부터 다시 테스트하시겠습니까?")) {
+            if(confirm("모든 기록을 초기화할까요?")) {
                 localStorage.clear();
                 location.reload();
             }
+        }
+
+        function exportData() {
+            const data = localStorage.getItem('found_boxes');
+            if(data) alert("복구 코드: " + btoa(data));
+            else alert("기록이 없습니다.");
         }
     </script>
 </body>

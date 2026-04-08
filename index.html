@@ -3,331 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주 탐사대: 포우리와 함께</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <title>아트밸리 보물찾기</title>
+    <meta name="description" content="아트밸리 곳곳에 숨겨진 보물 마커를 찾아 보물상자를 열어보세요!">
+    <meta name="theme-color" content="#0a1628">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Libraries -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    
-    <style>
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-        :root {
-            --space-dark: #0b0d17;
-            --star-gold: #ffd700;
-            --neon-blue: #00e5ff;
-            --panel-bg: rgba(15, 20, 40, 0.7);
-        }
-
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: var(--space-dark);
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 85% 30%, rgba(0, 229, 255, 0.1) 0%, transparent 50%);
-            color: #fff;
-            margin: 0; padding: 0; overflow: hidden; height: 100vh;
-            display: flex; flex-direction: column;
-        }
-
-        /* --- [메인 UI] --- */
-        #main-ui {
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 20px; animation: fadeIn 0.8s ease-out;
-        }
-
-        h1 {
-            font-size: 1.6rem; letter-spacing: 2px; color: var(--neon-blue);
-            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5); margin-bottom: 5px; text-align: center;
-        }
-
-        .subtitle { color: #aab; font-size: 0.95rem; margin-bottom: 30px; }
-
-        /* 인벤토리 (도감) UI */
-        .inventory-panel {
-            background: var(--panel-bg); backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 20px;
-            padding: 25px 20px; width: 90%; max-width: 360px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 229, 255, 0.05);
-            margin-bottom: 40px; text-align: center;
-        }
-
-        .inventory-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px;
-        }
-        
-        /* 마지막 아이템(포우리)은 가운데 정렬되도록 트릭 */
-        .inventory-grid .item-slot:nth-child(4) { grid-column: 1 / 3; justify-self: right; margin-right: -10px;}
-        .inventory-grid .item-slot:nth-child(5) { grid-column: 2 / 4; justify-self: left; margin-left: -10px;}
-
-        .item-slot {
-            display: flex; flex-direction: column; align-items: center;
-            opacity: 0.4; filter: grayscale(100%); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .item-slot.active {
-            opacity: 1; filter: grayscale(0%); transform: scale(1.1);
-        }
-
-        .item-icon {
-            font-size: 2.5rem; background: rgba(0,0,0,0.5); width: 70px; height: 70px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%; border: 2px dashed #555; margin-bottom: 8px;
-        }
-
-        .item-slot.active .item-icon {
-            background: rgba(0, 229, 255, 0.1); border: 2px solid var(--neon-blue);
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
-        }
-
-        /* 특별 아이템(마스코트) 강조 */
-        .item-slot.active.special .item-icon {
-            border-color: var(--star-gold); box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-        }
-
-        .item-name { font-size: 0.8rem; color: #ccc; word-break: keep-all; font-weight: bold; }
-        .item-slot.active .item-name { color: #fff; text-shadow: 0 0 5px var(--neon-blue); }
-        .item-slot.active.special .item-name { color: var(--star-gold); }
-
-        .btn-scan {
-            background: linear-gradient(135deg, #0055ff, #00e5ff); color: #fff; border: none;
-            padding: 18px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px;
-            cursor: pointer; box-shadow: 0 5px 20px rgba(0, 229, 255, 0.4);
-            transition: transform 0.2s;
-        }
-        .btn-scan:active { transform: scale(0.95); }
-
-        /* --- [스캐너 UI] --- */
-        #scanner-ui { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; }
-        #reader { width: 100%; height: 100vh; }
-        .scan-target {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 220px; height: 220px; border: 3px solid var(--neon-blue); border-radius: 20px;
-            box-shadow: 0 0 0 4000px rgba(11, 13, 23, 0.9); z-index: 110; pointer-events: none;
-        }
-        .scan-target::after { content: '별자리 마커를 스캔하세요'; position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); width: 200px; text-align: center; color: var(--neon-blue); font-weight: bold; }
-        
-        .btn-close { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.15); border: 1px solid #fff; color: white; padding: 12px 30px; border-radius: 30px; z-index: 120; backdrop-filter: blur(5px); }
-
-        /* --- [결과 모달창] --- */
-        #result-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal-content { background: #151828; border: 2px solid var(--neon-blue); padding: 40px 30px; border-radius: 24px; text-align: center; width: 80%; max-width: 320px; box-shadow: 0 0 40px rgba(0, 229, 255, 0.3); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        
-        .modal-img { font-size: 4rem; margin-bottom: 10px; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
-        .modal-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; color: #fff; }
-        .modal-desc { color: #aaa; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px; word-break: keep-all; }
-        .btn-confirm { background: var(--neon-blue); color: #000; font-weight: 900; border: none; padding: 15px 0; width: 100%; border-radius: 12px; font-size: 1.1rem; }
-
-        .reset-text { position: fixed; bottom: 15px; color: #555; font-size: 11px; text-decoration: underline; cursor: pointer; }
-
-        /* 클리어 효과 */
-        body.cleared { background: #000; }
-    </style>
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="main-ui">
-        <h1>탐사 지원 시스템</h1>
-        <div class="subtitle">모든 탐험 장비를 수집하세요</div>
+<!-- ★ Stars Background Canvas -->
+<canvas id="stars-canvas"></canvas>
 
-        <div class="inventory-panel">
-            <p style="margin: 0; color: #8899aa; font-size: 13px;">현재 장착된 장비 <span id="item-count" style="color:var(--neon-blue); font-weight:bold;">0/5</span></p>
-            
-            <div class="inventory-grid" id="inventory-grid">
+
+<!-- ================================================================
+     SCREEN 1: START (Landing)
+     ================================================================ -->
+<div id="screen-start" class="screen">
+
+    <div class="start-mascots">
+        <div class="mascot-clip"><img src="assets/images/dogi.png" alt="도기"></div>
+        <div class="mascot-clip mascot-center"><img src="assets/images/raebi.png" alt="래비"></div>
+        <div class="mascot-clip"><img src="assets/images/caeti.png" alt="캐티"></div>
+    </div>
+
+    <h1 class="start-title title-display">
+        <span class="text-gold">🏔️ 아트밸리</span><br>보물찾기
+    </h1>
+    <p class="start-subtitle">아트밸리 곳곳에 숨겨진 보물을 찾아라!</p>
+
+    <div class="start-rules panel">
+        <div class="rule">
+            <span class="rule-icon">📍</span>
+            <span>아트밸리 곳곳에 <b>보물 마커 10개</b>가 숨겨져 있어요</span>
+        </div>
+        <div class="rule">
+            <span class="rule-icon">📷</span>
+            <span>보물 마커(QR)를 발견하면 <b>스캔</b>하세요</span>
+        </div>
+        <div class="rule">
+            <span class="rule-icon">🎯</span>
+            <span><b>5개만 찾으면</b> 보물상자가 열려요!</span>
+        </div>
+        <div class="rule">
+            <span class="rule-icon">🏆</span>
+            <span>완료하면 <b>인증서 + 특별 선물</b>을 받아요!</span>
+        </div>
+    </div>
+
+    <button class="btn btn-gold btn-block btn-scan-main" onclick="startGame()" id="btn-start">
+        🏔️ 보물찾기 시작!
+    </button>
+
+</div>
+
+
+<!-- ================================================================
+     SCREEN 2: INVENTORY (Main Game Screen)
+     ================================================================ -->
+<div id="screen-inventory" class="screen">
+
+    <div class="inv-header">
+        <h1 class="inv-title title-display text-gold">🏔️ 아트밸리 보물찾기</h1>
+        <p class="inv-sub">숨겨진 보물 마커를 찾아 스캔하세요!</p>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-label">
+            <span>보물 수집 현황</span>
+            <span class="progress-count" id="progress-count">0/5</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-segment" data-idx="0"></div>
+            <div class="progress-segment" data-idx="1"></div>
+            <div class="progress-segment" data-idx="2"></div>
+            <div class="progress-segment" data-idx="3"></div>
+            <div class="progress-segment" data-idx="4"></div>
+        </div>
+    </div>
+
+    <!-- Inventory Panel -->
+    <div class="inv-panel panel">
+        <div class="inv-panel-title">보물 도감</div>
+
+        <div class="inv-grid">
+            <div class="item-slot" id="slot-key">
+                <div class="item-icon-wrap">🔑</div>
+                <div class="item-name">황금 열쇠</div>
+            </div>
+            <div class="item-slot" id="slot-bag">
+                <div class="item-icon-wrap">🎒</div>
+                <div class="item-name">탐험가 가방</div>
+            </div>
+            <div class="item-slot" id="slot-map">
+                <div class="item-icon-wrap">🗺️</div>
+                <div class="item-name">보물 지도</div>
+            </div>
+            <div class="item-slot" id="slot-lantern">
+                <div class="item-icon-wrap">🔦</div>
+                <div class="item-name">탐험 랜턴</div>
+            </div>
+            <div class="item-slot" id="slot-gem">
+                <div class="item-icon-wrap">💎</div>
+                <div class="item-name">보물 원석</div>
+            </div>
+        </div>
+
+        <!-- Mascot Message -->
+        <div class="inv-mascot-msg">
+            <div class="mascot-clip mascot-sm"><img src="assets/images/dogi.png" alt="도기"></div>
+            <span id="mascot-msg">보물 마커를 찾아 스캔해봐!</span>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="inv-actions">
+        <button class="btn btn-gold btn-block btn-scan-main" id="btn-scan" onclick="openScanner()">
+            📷 QR 마커 스캔
+        </button>
+        <button class="reset-link" onclick="resetGame()">[진행자 전용] 데이터 초기화</button>
+    </div>
+
+</div>
+
+
+<!-- ================================================================
+     SCREEN 3: QR SCANNER
+     ================================================================ -->
+<div id="screen-scanner" class="screen">
+
+    <div id="reader"></div>
+
+    <!-- Overlay -->
+    <div class="scan-overlay">
+        <!-- Scan Frame -->
+        <div class="scan-frame"></div>
+        <div class="scan-line"></div>
+
+        <!-- Hint with mascot -->
+        <div class="scan-hint">
+            <div class="mascot-clip mascot-xs"><img src="assets/images/raebi.png" alt="래비"></div>
+            <span>보물 마커를 찾아 스캔해!</span>
+        </div>
+
+        <!-- Close button -->
+        <div class="scan-bottom">
+            <button class="btn btn-outline" onclick="closeScanner()">✕ 취소</button>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- ================================================================
+     MODAL: ITEM ACQUIRED
+     ================================================================ -->
+<div id="modal-item" class="modal">
+    <div class="modal-card">
+        <div class="mascot-clip mascot-md" style="margin:0 auto 12px;"><img src="assets/images/caeti.png" alt="캐티"></div>
+        <div class="modal-icon">🔑</div>
+        <div class="modal-title success">황금 열쇠 발견!</div>
+        <div class="modal-desc">보물상자의 자물쇠를 열 열쇠 조각!</div>
+        <button class="btn btn-gold modal-btn" onclick="closeItemModal(false)">보관하기!</button>
+    </div>
+</div>
+
+
+<!-- ================================================================
+     MODAL: ERROR / DUPLICATE
+     ================================================================ -->
+<div id="modal-error" class="modal">
+    <div class="modal-card">
+        <div class="modal-icon">❌</div>
+        <div class="modal-title error">잘못된 마커</div>
+        <div class="modal-desc">아트밸리 공식 보물 마커가 아닙니다.</div>
+        <button class="btn btn-outline modal-btn" onclick="closeErrorModal()">확인</button>
+    </div>
+</div>
+
+
+<!-- ================================================================
+     SCREEN 4: CLEAR (Treasure Chest Open!)
+     ================================================================ -->
+<div id="screen-clear" class="screen">
+
+    <div class="clear-chest">🎁</div>
+    <h1 class="clear-title title-display text-gold">보물상자 열림!</h1>
+    <p class="clear-subtitle">
+        축하합니다! 🎉<br>
+        아트밸리의 보물을 모두 찾았어요!
+    </p>
+
+    <div class="clear-mascots">
+        <div class="mascot-clip mascot-md"><img src="assets/images/dogi.png" alt="도기"></div>
+        <div class="mascot-clip mascot-md"><img src="assets/images/raebi.png" alt="래비"></div>
+        <div class="mascot-clip mascot-md"><img src="assets/images/caeti.png" alt="캐티"></div>
+    </div>
+
+    <div class="clear-items">
+        <span>🔑</span>
+        <span>🎒</span>
+        <span>🗺️</span>
+        <span>🔦</span>
+        <span>💎</span>
+    </div>
+
+    <button class="btn btn-gold btn-block" onclick="goToCertificate()">
+        📜 인증서 받기
+    </button>
+
+    <div class="clear-notice">
+        🎁 안내데스크에서 특별 선물을 받으세요!
+    </div>
+
+</div>
+
+
+<!-- ================================================================
+     SCREEN 5: CERTIFICATE
+     ================================================================ -->
+<div id="screen-certificate" class="screen">
+
+    <div class="cert-wrapper">
+
+        <!-- Certificate Card (캡처 영역) -->
+        <div class="cert-card" id="cert-card">
+            <div class="cert-content">
+                <div class="cert-badge">🏆</div>
+                <div class="cert-label">ART VALLEY</div>
+                <h2 class="cert-title title-display text-gold">보물찾기 인증서</h2>
+                <div class="cert-divider"></div>
+
+                <input type="text"
+                       id="cert-name-input"
+                       class="cert-name-input"
+                       placeholder="이름을 입력하세요"
+                       maxlength="20"
+                       autocomplete="off">
+
+                <div class="cert-date" id="cert-date">2026.04.07</div>
+
+                <div class="cert-items">
+                    <span>🔑</span>
+                    <span>🎒</span>
+                    <span>🗺️</span>
+                    <span>🔦</span>
+                    <span>💎</span>
                 </div>
+
+                <div class="cert-mascots">
+                    <div class="mascot-clip mascot-sm"><img src="assets/images/dogi.png" alt="도기"></div>
+                    <div class="mascot-clip mascot-sm"><img src="assets/images/raebi.png" alt="래비"></div>
+                    <div class="mascot-clip mascot-sm"><img src="assets/images/caeti.png" alt="캐티"></div>
+                </div>
+
+                <div class="cert-footer-text">
+                    아트밸리의 보물을 모두 찾은<br>
+                    진정한 탐험가입니다! 🌟
+                </div>
+            </div>
         </div>
 
-        <button class="btn-scan" id="start-btn" onclick="startScanner()">🚀 스캐너 렌즈 개방</button>
-        <div class="reset-text" onclick="resetGame()">[진행자 전용] 데이터 초기화</div>
-    </div>
-
-    <div id="scanner-ui">
-        <div id="reader"></div>
-        <div class="scan-target"></div>
-        <button class="btn-close" onclick="stopScanner()">취소</button>
-    </div>
-
-    <div id="result-modal">
-        <div class="modal-content">
-            <div id="modal-img" class="modal-img">🎒</div>
-            <div id="modal-title" class="modal-title">탐험 배낭 획득!</div>
-            <div id="modal-desc" class="modal-desc">이제 물건을 담을 수 있습니다.</div>
-            <button class="btn-confirm" onclick="closeModal()">가방에 넣기</button>
+        <!-- Actions -->
+        <div class="cert-actions">
+            <button class="btn btn-gold btn-block" onclick="saveCertificate()">
+                📸 이미지로 저장
+            </button>
+            <button class="btn btn-outline btn-block" onclick="showScreen('screen-inventory'); updateInventoryUI();">
+                ← 돌아가기
+            </button>
         </div>
+
     </div>
 
-    <script>
-        // 🌟 도감 아이템 데이터 (순서대로 획득하거나 랜덤 획득 가능)
-        const MASTER_ITEMS = [
-            { id: 'bag', name: '우주 배낭', icon: '🎒', desc: '튼튼한 우주 탐험용 배낭을 찾았습니다!' },
-            { id: 'telescope', name: '천체 망원경', icon: '🔭', desc: '머나먼 성단을 관측할 수 있는 망원경입니다.' },
-            { id: 'map', name: '별자리 지도', icon: '🗺️', desc: '길을 잃지 않도록 도와줄 홀로그램 지도입니다.' },
-            { id: 'hat', name: '탐험가 모자', icon: '🧢', desc: '우주 방사선을 막아주는 특수 모자입니다.' },
-            { id: 'pouri', name: '마스코트 포우리', icon: '👽', desc: '천문과학관의 마스코트 포우리가 합류했습니다!', special: true }
-        ];
+</div>
 
-        let html5QrScanner = null;
-        let isProcessing = false;
 
-        window.onload = () => { initInventory(); updateUI(); };
+<!-- App Logic -->
+<script src="app.js"></script>
 
-        function hapticFeedback(type) {
-            if (!navigator.vibrate) return;
-            if (type === 'error') navigator.vibrate([100, 50, 100]);
-            if (type === 'item') navigator.vibrate([100, 50, 200]);
-            if (type === 'clear') navigator.vibrate([300, 100, 300, 100, 500, 200, 1000]);
-        }
-
-        // 도감 UI 초기 렌더링
-        function initInventory() {
-            const grid = document.getElementById('inventory-grid');
-            MASTER_ITEMS.forEach(item => {
-                const slot = document.createElement('div');
-                slot.className = `item-slot ${item.special ? 'special' : ''}`;
-                slot.id = `slot-${item.id}`;
-                slot.innerHTML = `
-                    <div class="item-icon">${item.icon}</div>
-                    <div class="item-name">${item.name}</div>
-                `;
-                grid.appendChild(slot);
-            });
-        }
-
-        function startScanner() {
-            document.getElementById('main-ui').style.display = 'none';
-            document.getElementById('scanner-ui').style.display = 'block';
-
-            html5QrScanner = new Html5Qrcode("reader");
-            html5QrScanner.start(
-                { facingMode: "environment" },
-                { fps: 15, qrbox: { width: 220, height: 220 }, aspectRatio: window.innerHeight / window.innerWidth },
-                onScanSuccess
-            ).catch(err => { alert("카메라 접근 권한이 필요합니다."); stopScanner(); });
-        }
-
-        function stopScanner() {
-            if (html5QrScanner) {
-                html5QrScanner.stop().then(() => { html5QrScanner.clear(); html5QrScanner = null; });
-            }
-            document.getElementById('scanner-ui').style.display = 'none';
-            document.getElementById('main-ui').style.display = 'flex';
-            isProcessing = false;
-        }
-
-        function onScanSuccess(decodedText) {
-            if (isProcessing) return; 
-            isProcessing = true;
-            
-            if (html5QrScanner) {
-                html5QrScanner.stop().then(() => { html5QrScanner.clear(); html5QrScanner = null; });
-            }
-            document.getElementById('scanner-ui').style.display = 'none';
-            
-            processGameLogic(decodedText);
-        }
-
-        function processGameLogic(code) {
-            let scannedBoxes = JSON.parse(localStorage.getItem('scanned_boxes') || '[]');
-            let myItems = JSON.parse(localStorage.getItem('my_items') || '[]');
-
-            // 1. 유효하지 않은 코드 방어 (기획에 맞게 BOX_ 어쩌구 하는 코드들)
-            if (!code.startsWith('BOX_')) {
-                showModal('❌', '접근 거부', '과학관의 공식 마커가 아닙니다.', 'error');
-                return;
-            }
-
-            // 2. 이미 찍은 QR 코드 방어
-            if (scannedBoxes.includes(code)) {
-                showModal('⚠️', '중복 스캔', '이 구역의 장비는 이미 회수했습니다.<br>다른 곳을 탐색하세요.', 'error');
-                return;
-            }
-
-            // 3. 새로운 QR 스캔 성공 -> 아이템 드롭 로직
-            scannedBoxes.push(code);
-            localStorage.setItem('scanned_boxes', JSON.stringify(scannedBoxes));
-
-            // 내가 아직 안 가진 아이템만 필터링
-            const availableItems = MASTER_ITEMS.filter(item => !myItems.some(my => my.id === item.id));
-            
-            // 만약 다 찾았다면 (예외 처리)
-            if (availableItems.length === 0) {
-                showModal('✨', '탐색 완료', '모든 장비를 찾았습니다!', 'clear');
-                return;
-            }
-
-            // 순서대로 주거나, 랜덤으로 주거나. (여기서는 랜덤 드롭 방식 사용)
-            const droppedItem = availableItems[Math.floor(Math.random() * availableItems.length)];
-            
-            myItems.push(droppedItem);
-            localStorage.setItem('my_items', JSON.stringify(myItems));
-
-            // 모달 띄우기
-            const isLast = myItems.length === MASTER_ITEMS.length;
-            showModal(
-                droppedItem.icon, 
-                `${droppedItem.name} 획득!`, 
-                droppedItem.desc + (isLast ? "<br><br><b style='color:#ffd700;'>🎉 모든 장비를 모았습니다! 🎉</b>" : ""), 
-                isLast ? 'clear' : 'item'
-            );
-
-            if (isLast) {
-                localStorage.setItem('game_cleared', 'true');
-                fireConfetti();
-            }
-        }
-
-        function showModal(icon, title, desc, vibeType) {
-            hapticFeedback(vibeType);
-            document.getElementById('modal-img').innerText = icon;
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-title').style.color = (vibeType === 'error') ? '#ff4444' : (vibeType === 'clear' ? '#ffd700' : '#00e5ff');
-            document.getElementById('modal-desc').innerHTML = desc;
-            
-            document.getElementById('result-modal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('result-modal').style.display = 'none';
-            document.getElementById('main-ui').style.display = 'flex';
-            isProcessing = false;
-            updateUI();
-        }
-
-        function updateUI() {
-            const myItems = JSON.parse(localStorage.getItem('my_items') || '[]');
-            document.getElementById('item-count').innerText = `${myItems.length}/5`;
-
-            // 도감 활성화 애니메이션
-            myItems.forEach(item => {
-                const slot = document.getElementById(`slot-${item.id}`);
-                if (slot && !slot.classList.contains('active')) {
-                    // 약간의 딜레이를 주어 UI가 뜰 때 촥 켜지는 느낌
-                    setTimeout(() => slot.classList.add('active'), 100);
-                }
-            });
-
-            // 올클리어 시 UI 변경
-            if (localStorage.getItem('game_cleared') === 'true') {
-                document.getElementById('start-btn').style.display = 'none';
-                document.querySelector('.subtitle').innerHTML = "<b style='color:#ffd700;'>완벽한 탐험 준비가 끝났습니다! 안내데스크로 오세요.</b>";
-                document.body.classList.add('cleared');
-            }
-        }
-
-        function fireConfetti() {
-            const duration = 3000; const end = Date.now() + duration;
-            (function frame() {
-                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#00e5ff', '#ffd700', '#ffffff'] });
-                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#00e5ff', '#ffd700', '#ffffff'] });
-                if (Date.now() < end) requestAnimationFrame(frame);
-            }());
-        }
-
-        function resetGame() {
-            if(confirm("모든 수집 데이터를 초기화합니다.")) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
-    </script>
 </body>
 </html>

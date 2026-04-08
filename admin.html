@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아트밸리 보물찾기 — 관리자 도구</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a1628;
+            --panel: #111d30;
+            --gold: #f4a940;
+            --text: #ffffff;
+            --muted: #7a8da6;
+            --border: rgba(244, 169, 64, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--muted);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .tab.active {
+            background: rgba(244, 169, 64, 0.15);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* QR Grid */
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .qr-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .qr-card canvas {
+            display: block;
+            margin: 0 auto 12px;
+            border-radius: 8px;
+        }
+
+        .qr-code-label {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 4px;
+        }
+
+        .qr-code-value {
+            font-size: 0.75rem;
+            color: var(--muted);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Print Layout */
+        .print-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .print-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .print-sticker {
+            background: white;
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            color: #333;
+        }
+
+        .print-sticker canvas {
+            display: block;
+            margin: 0 auto 8px;
+        }
+
+        .print-sticker .sticker-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #e87a3a;
+            margin-bottom: 4px;
+        }
+
+        .print-sticker .sticker-sub {
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #f4a940, #e87a3a);
+            color: white;
+        }
+
+        .btn-outline {
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 24px 0;
+        }
+
+        /* URL Section */
+        .url-section {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto 32px;
+        }
+
+        .url-input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        /* Access QR */
+        .access-qr {
+            text-align: center;
+            margin: 24px auto;
+        }
+
+        .access-qr canvas {
+            display: block;
+            margin: 12px auto;
+            border-radius: 12px;
+        }
+
+        .access-qr-label {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        /* Info box */
+        .info-box {
+            background: rgba(244, 169, 64, 0.08);
+            border: 1px solid rgba(244, 169, 64, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            font-size: 0.85rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .info-box strong { color: var(--gold); }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white !important;
+                color: #333 !important;
+                padding: 0 !important;
+            }
+
+            .no-print { display: none !important; }
+
+            .print-sticker {
+                break-inside: avoid;
+                border: 1px dashed #999;
+            }
+
+            .qr-card {
+                background: white !important;
+                border: 1px solid #ddd !important;
+                break-inside: avoid;
+            }
+
+            .qr-code-label { color: #e87a3a !important; }
+            .qr-code-value { color: #666 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🏔️ 아트밸리 보물찾기</h1>
+    <p class="subtitle">관리자 도구 — QR 코드 생성 & 인쇄</p>
+
+    <!-- Tabs -->
+    <div class="tabs no-print">
+        <button class="tab active" onclick="switchTab('tab-qr', this)">📱 QR 코드</button>
+        <button class="tab" onclick="switchTab('tab-print', this)">🖨️ 인쇄용</button>
+        <button class="tab" onclick="switchTab('tab-access', this)">🔗 접속 QR</button>
+        <button class="tab" onclick="switchTab('tab-settings', this)">⚙️ 설정</button>
+    </div>
+
+    <!-- TAB: QR Codes -->
+    <div id="tab-qr" class="tab-content active">
+        <div class="info-box no-print">
+            <strong>10개의 보물 마커 QR 코드</strong><br>
+            아래 QR 코드를 아트밸리 곳곳에 부착하세요.<br>
+            방문객은 이 중 <strong>5개만 찾으면</strong> 보물상자가 열립니다!
+        </div>
+
+        <div class="qr-grid" id="qr-grid"></div>
+
+        <div class="btn-group no-print">
+            <button class="btn btn-gold" onclick="window.print()">🖨️ 전체 인쇄</button>
+            <button class="btn btn-outline" onclick="downloadAllQR()">💾 전체 다운로드</button>
+        </div>
+    </div>
+
+    <!-- TAB: Print Layout -->
+    <div id="tab-print" class="tab-content">
+        <div class="info-box no-print">
+            <strong>인쇄용 스티커 레이아웃</strong><br>
+            A4 용지에 2열로 인쇄됩니다. 잘라서 라미네이팅 후 부착하세요.
+        </div>
+
+        <div class="print-section">
+            <div class="print-grid" id="print-grid"></div>
+        </div>
+
+        <div class="btn-group no-print">
+            <button class="btn btn-gold" onclick="window.print()">🖨️ 인쇄하기</button>
+        </div>
+    </div>
+
+    <!-- TAB: Access QR -->
+    <div id="tab-access" class="tab-content">
+        <div class="url-section">
+            <strong>게임 접속 URL</strong>
+            <p style="color:var(--muted);font-size:0.85rem;margin-top:4px;">
+                입구 포스터에 부착할 QR 코드를 생성합니다.
+            </p>
+            <div class="url-input-group no-print">
+                <input type="text" class="url-input" id="game-url"
+                       placeholder="https://username.github.io/treasurehunt/"
+                       value="">
+                <button class="btn btn-gold" onclick="generateAccessQR()">생성</button>
+            </div>
+        </div>
+
+        <div class="access-qr" id="access-qr-area">
+            <p style="color:var(--muted);">위에서 URL을 입력하고 '생성'을 눌러주세요.</p>
+        </div>
+    </div>
+
+    <!-- TAB: Settings -->
+    <div id="tab-settings" class="tab-content">
+        <div class="url-section">
+            <strong>⚠️ 데이터 관리</strong>
+            <p style="color:var(--muted);font-size:0.85rem;margin:12px 0;">
+                방문객의 게임 데이터를 초기화합니다.<br>
+                (이 브라우저의 localStorage만 초기화됩니다)
+            </p>
+            <button class="btn btn-danger" onclick="resetAllData()">🗑️ 게임 데이터 초기화</button>
+        </div>
+
+        <div class="info-box">
+            <strong>QR 코드 목록</strong><br>
+            <code>AV_TREASURE_01</code> ~ <code>AV_TREASURE_10</code><br><br>
+            <strong>배치 팁</strong><br>
+            • 너무 쉬운 곳 3~4개 + 적당한 곳 4~5개 + 어려운 곳 2~3개<br>
+            • QR 코드가 직사광선에 노출되지 않게 배치<br>
+            • 무릎~눈높이 사이에 부착 (접근성 고려)<br>
+            • 라미네이팅으로 방수 처리 권장
+        </div>
+    </div>
+
+    <script>
+        const QR_CODES = [
+            'AV_TREASURE_01', 'AV_TREASURE_02', 'AV_TREASURE_03',
+            'AV_TREASURE_04', 'AV_TREASURE_05', 'AV_TREASURE_06',
+            'AV_TREASURE_07', 'AV_TREASURE_08', 'AV_TREASURE_09',
+            'AV_TREASURE_10'
+        ];
+
+        // Tab switching
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Generate all QR codes
+        function generateQRCodes() {
+            const grid = document.getElementById('qr-grid');
+            const printGrid = document.getElementById('print-grid');
+            grid.innerHTML = '';
+            printGrid.innerHTML = '';
+
+            QR_CODES.forEach((code, idx) => {
+                // Screen QR Card
+                const card = document.createElement('div');
+                card.className = 'qr-card';
+                card.innerHTML = `
+                    <canvas id="qr-screen-${idx}"></canvas>
+                    <div class="qr-code-label">⭐ 보물 마커 #${idx + 1}</div>
+                    <div class="qr-code-value">${code}</div>
+                `;
+                grid.appendChild(card);
+
+                // Print Sticker
+                const sticker = document.createElement('div');
+                sticker.className = 'print-sticker';
+                sticker.innerHTML = `
+                    <div class="sticker-title">⭐ 보물 마커 #${idx + 1}</div>
+                    <canvas id="qr-print-${idx}"></canvas>
+                    <div class="sticker-sub">스마트폰으로 스캔하세요!</div>
+                    <div class="sticker-sub" style="font-size:0.6rem;color:#aaa;margin-top:2px;">🏔️ 아트밸리 보물찾기</div>
+                `;
+                printGrid.appendChild(sticker);
+
+                // Render QR codes after DOM insertion
+                requestAnimationFrame(() => {
+                    // Screen version (dark theme)
+                    QRCode.toCanvas(document.getElementById(`qr-screen-${idx}`), code, {
+                        width: 160,
+                        margin: 2,
+                        color: { dark: '#f4a940', light: '#111d30' },
+                        errorCorrectionLevel: 'H'
+                    });
+
+                    // Print version (light theme)
+                    QRCode.toCanvas(document.getElementById(`qr-print-${idx}`), code, {
+                        width: 140,
+                        margin: 2,
+                        color: { dark: '#333333', light: '#ffffff' },
+                        errorCorrectionLevel: 'H'
+                    });
+                });
+            });
+        }
+
+        // Generate access QR for entrance poster
+        function generateAccessQR() {
+            const url = document.getElementById('game-url').value.trim();
+            if (!url) {
+                alert('접속 URL을 입력해주세요.');
+                return;
+            }
+
+            const area = document.getElementById('access-qr-area');
+            area.innerHTML = '<canvas id="access-qr-canvas"></canvas>';
+            area.innerHTML += `<div class="access-qr-label">입구 포스터에 부착할 QR</div>`;
+            area.innerHTML += `<div class="access-qr-label" style="font-size:0.75rem;">${url}</div>`;
+
+            requestAnimationFrame(() => {
+                QRCode.toCanvas(document.getElementById('access-qr-canvas'), url, {
+                    width: 200,
+                    margin: 3,
+                    color: { dark: '#333333', light: '#ffffff' },
+                    errorCorrectionLevel: 'H'
+                });
+            });
+        }
+
+        // Download all QR codes as images
+        function downloadAllQR() {
+            QR_CODES.forEach((code, idx) => {
+                const canvas = document.getElementById(`qr-screen-${idx}`);
+                if (canvas) {
+                    const link = document.createElement('a');
+                    link.download = `보물마커_${idx + 1}_${code}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }
+            });
+        }
+
+        // Reset game data
+        function resetAllData() {
+            if (confirm('모든 게임 데이터를 초기화합니다.\n정말 실행할까요?')) {
+                const keys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('av_')) keys.push(key);
+                }
+                keys.forEach(k => localStorage.removeItem(k));
+                alert('게임 데이터가 초기화되었습니다.');
+            }
+        }
+
+        // Init
+        window.addEventListener('DOMContentLoaded', generateQRCodes);
+    </script>
+
+</body>
+</html>

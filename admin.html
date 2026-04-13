@@ -274,7 +274,6 @@
     <h1>🏔️ 아트밸리 보물찾기</h1>
     <p class="subtitle">관리자 도구 — QR 코드 생성 & 인쇄</p>
 
-    <!-- Tabs -->
     <div class="tabs no-print">
         <button class="tab active" onclick="switchTab('tab-qr', this)">📱 QR 코드</button>
         <button class="tab" onclick="switchTab('tab-print', this)">🖨️ 인쇄용</button>
@@ -282,7 +281,6 @@
         <button class="tab" onclick="switchTab('tab-settings', this)">⚙️ 설정</button>
     </div>
 
-    <!-- TAB: QR Codes -->
     <div id="tab-qr" class="tab-content active">
         <div class="info-box no-print">
             <strong>10개의 보물 마커 QR 코드</strong><br>
@@ -298,7 +296,6 @@
         </div>
     </div>
 
-    <!-- TAB: Print Layout -->
     <div id="tab-print" class="tab-content">
         <div class="info-box no-print">
             <strong>인쇄용 스티커 레이아웃</strong><br>
@@ -314,7 +311,6 @@
         </div>
     </div>
 
-    <!-- TAB: Access QR -->
     <div id="tab-access" class="tab-content">
         <div class="url-section">
             <strong>게임 접속 URL</strong>
@@ -334,7 +330,6 @@
         </div>
     </div>
 
-    <!-- TAB: Settings -->
     <div id="tab-settings" class="tab-content">
         <div class="url-section">
             <strong>⚠️ 데이터 관리</strong>
@@ -364,7 +359,6 @@
             'AV_TREASURE_10'
         ];
 
-        // Tab switching
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -372,7 +366,6 @@
             btn.classList.add('active');
         }
 
-        // Generate all QR codes
         function generateQRCodes() {
             const grid = document.getElementById('qr-grid');
             const printGrid = document.getElementById('print-grid');
@@ -380,7 +373,6 @@
             printGrid.innerHTML = '';
 
             QR_CODES.forEach((code, idx) => {
-                // Screen QR Card
                 const card = document.createElement('div');
                 card.className = 'qr-card';
                 card.innerHTML = `
@@ -390,7 +382,6 @@
                 `;
                 grid.appendChild(card);
 
-                // Print Sticker
                 const sticker = document.createElement('div');
                 sticker.className = 'print-sticker';
                 sticker.innerHTML = `
@@ -401,9 +392,7 @@
                 `;
                 printGrid.appendChild(sticker);
 
-                // Render QR codes after DOM insertion
                 requestAnimationFrame(() => {
-                    // Screen version (dark theme)
                     QRCode.toCanvas(document.getElementById(`qr-screen-${idx}`), code, {
                         width: 160,
                         margin: 2,
@@ -411,7 +400,6 @@
                         errorCorrectionLevel: 'H'
                     });
 
-                    // Print version (light theme)
                     QRCode.toCanvas(document.getElementById(`qr-print-${idx}`), code, {
                         width: 140,
                         margin: 2,
@@ -422,7 +410,6 @@
             });
         }
 
-        // Generate access QR for entrance poster
         function generateAccessQR() {
             const url = document.getElementById('game-url').value.trim();
             if (!url) {
@@ -445,7 +432,6 @@
             });
         }
 
-        // Download all QR codes as images
         function downloadAllQR() {
             QR_CODES.forEach((code, idx) => {
                 const canvas = document.getElementById(`qr-screen-${idx}`);
@@ -458,7 +444,6 @@
             });
         }
 
-        // Reset game data
         function resetAllData() {
             if (confirm('모든 게임 데이터를 초기화합니다.\n정말 실행할까요?')) {
                 const keys = [];
@@ -471,7 +456,6 @@
             }
         }
 
-        // Init
         window.addEventListener('DOMContentLoaded', generateQRCodes);
     </script>
 

@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>아트밸리 보물찾기 — 관리자 도구</title>
+    <!-- Fonts -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <!-- QR Libraries (Keeping both for maximal compatibility as requested) -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    
     <style>
         :root {
             --bg: #0a1628;
@@ -90,6 +94,7 @@
             display: block;
             margin: 0 auto 12px;
             border-radius: 8px;
+            background: white; /* Visibility on dark theme */
         }
 
         .qr-code-label {
@@ -221,6 +226,7 @@
             display: block;
             margin: 12px auto;
             border-radius: 12px;
+            background: white;
         }
 
         .access-qr-label {
@@ -272,7 +278,7 @@
 <body>
 
     <h1>🏔️ 아트밸리 보물찾기</h1>
-    <p class="subtitle">관리자 도구 — QR 코드 생성 & 인쇄</p>
+    <p class="subtitle" id="status-msg">관리자 도구 — QR 코드 생성 & 인쇄</p>
 
     <div class="tabs no-print">
         <button class="tab active" onclick="switchTab('tab-qr', this)">📱 QR 코드</button>
@@ -281,6 +287,7 @@
         <button class="tab" onclick="switchTab('tab-settings', this)">⚙️ 설정</button>
     </div>
 
+    <!-- TAB: QR Codes -->
     <div id="tab-qr" class="tab-content active">
         <div class="info-box no-print">
             <strong>10개의 보물 마커 QR 코드</strong><br>
@@ -296,6 +303,7 @@
         </div>
     </div>
 
+    <!-- TAB: Print Layout -->
     <div id="tab-print" class="tab-content">
         <div class="info-box no-print">
             <strong>인쇄용 스티커 레이아웃</strong><br>
@@ -311,6 +319,7 @@
         </div>
     </div>
 
+    <!-- TAB: Access QR -->
     <div id="tab-access" class="tab-content">
         <div class="url-section">
             <strong>게임 접속 URL</strong>
@@ -330,6 +339,7 @@
         </div>
     </div>
 
+    <!-- TAB: Settings -->
     <div id="tab-settings" class="tab-content">
         <div class="url-section">
             <strong>⚠️ 데이터 관리</strong>
@@ -366,6 +376,18 @@
             btn.classList.add('active');
         }
 
+        // 안정적인 초기화 로직 (Local 버전의 initAdmin 적용)
+        function initAdmin() {
+            // QRious or QRCode library check
+            if (typeof QRCode === 'undefined' && typeof QRious === 'undefined') {
+                document.getElementById('status-msg').innerText = "API 연결 대기 중...";
+                setTimeout(initAdmin, 100);
+                return;
+            }
+            document.getElementById('status-msg').innerText = "관리자 도구 — QR 코드 생성 완료";
+            generateQRCodes();
+        }
+
         function generateQRCodes() {
             const grid = document.getElementById('qr-grid');
             const printGrid = document.getElementById('print-grid');
@@ -373,6 +395,7 @@
             printGrid.innerHTML = '';
 
             QR_CODES.forEach((code, idx) => {
+                // Screen QR Card
                 const card = document.createElement('div');
                 card.className = 'qr-card';
                 card.innerHTML = `
@@ -382,6 +405,7 @@
                 `;
                 grid.appendChild(card);
 
+                // Print Sticker
                 const sticker = document.createElement('div');
                 sticker.className = 'print-sticker';
                 sticker.innerHTML = `
@@ -392,21 +416,29 @@
                 `;
                 printGrid.appendChild(sticker);
 
-                requestAnimationFrame(() => {
-                    QRCode.toCanvas(document.getElementById(`qr-screen-${idx}`), code, {
-                        width: 160,
-                        margin: 2,
-                        color: { dark: '#f4a940', light: '#111d30' },
-                        errorCorrectionLevel: 'H'
-                    });
+                // Render QR codes
+                setTimeout(() => {
+                    const screenCanvas = document.getElementById(`qr-screen-${idx}`);
+                    const printCanvas = document.getElementById(`qr-print-${idx}`);
 
-                    QRCode.toCanvas(document.getElementById(`qr-print-${idx}`), code, {
-                        width: 140,
-                        margin: 2,
-                        color: { dark: '#333333', light: '#ffffff' },
-                        errorCorrectionLevel: 'H'
-                    });
-                });
+                    if (typeof QRCode !== 'undefined') {
+                        // Priority: qrcode.js (Remote version choice)
+                        QRCode.toCanvas(screenCanvas, code, {
+                            width: 160, margin: 2,
+                            color: { dark: '#f4a940', light: '#111d30' },
+                            errorCorrectionLevel: 'H'
+                        });
+                        QRCode.toCanvas(printCanvas, code, {
+                            width: 140, margin: 2,
+                            color: { dark: '#333333', light: '#ffffff' },
+                            errorCorrectionLevel: 'H'
+                        });
+                    } else if (typeof QRious !== 'undefined') {
+                        // Fallback: qrious (Local version choice)
+                        new QRious({ element: screenCanvas, value: code, size: 160, level: 'H' });
+                        new QRious({ element: printCanvas, value: code, size: 140, level: 'H' });
+                    }
+                }, 50);
             });
         }
 
@@ -422,14 +454,18 @@
             area.innerHTML += `<div class="access-qr-label">입구 포스터에 부착할 QR</div>`;
             area.innerHTML += `<div class="access-qr-label" style="font-size:0.75rem;">${url}</div>`;
 
-            requestAnimationFrame(() => {
-                QRCode.toCanvas(document.getElementById('access-qr-canvas'), url, {
-                    width: 200,
-                    margin: 3,
-                    color: { dark: '#333333', light: '#ffffff' },
-                    errorCorrectionLevel: 'H'
-                });
-            });
+            setTimeout(() => {
+                const canvas = document.getElementById('access-qr-canvas');
+                if (typeof QRCode !== 'undefined') {
+                    QRCode.toCanvas(canvas, url, {
+                        width: 200, margin: 3,
+                        color: { dark: '#333333', light: '#ffffff' },
+                        errorCorrectionLevel: 'H'
+                    });
+                } else if (typeof QRious !== 'undefined') {
+                    new QRious({ element: canvas, value: url, size: 200, level: 'H' });
+                }
+            }, 50);
         }
 
         function downloadAllQR() {
@@ -446,17 +482,13 @@
 
         function resetAllData() {
             if (confirm('모든 게임 데이터를 초기화합니다.\n정말 실행할까요?')) {
-                const keys = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('av_')) keys.push(key);
-                }
-                keys.forEach(k => localStorage.removeItem(k));
+                localStorage.clear();
                 alert('게임 데이터가 초기화되었습니다.');
             }
         }
 
-        window.addEventListener('DOMContentLoaded', generateQRCodes);
+        // Init
+        window.onload = initAdmin;
     </script>
 
 </body>

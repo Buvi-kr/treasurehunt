@@ -577,11 +577,15 @@ function onScanSuccess(decodedText) {
         }
     }
 
-    // Hide scanner screen
-    document.getElementById('screen-scanner').classList.remove('active');
-
-    // Process game logic
-    processQRCode(decodedText);
+    // Give a brief delay for a better "scanning" feel (Haptic + Wait)
+    haptic('click');
+    
+    setTimeout(() => {
+        // Hide scanner screen
+        document.getElementById('screen-scanner').classList.remove('active');
+        // Process game logic
+        processQRCode(decodedText);
+    }, 600);
 }
 
 // ── Game Logic ─────────────────────────────────────
@@ -657,30 +661,38 @@ function showItemModal(item, count, isClear) {
     
     // Update mascot action image
     const mascotImg = modal.querySelector('.mascot-clip img');
+    
+    const showModalNow = () => {
+        modal.querySelector('.modal-icon').textContent = item.icon;
+        const titleEl = modal.querySelector('.modal-title');
+        titleEl.textContent = item.name + ' 발견!';
+        titleEl.className = 'modal-title success';
+
+        let descText = item.desc;
+        if (isClear) {
+            descText += '\n\n🎉 모든 보물을 찾았어요!';
+        } else {
+            descText += `\n\n(${count}/${REQUIRED_COUNT} 수집 완료)`;
+        }
+        modal.querySelector('.modal-desc').textContent = descText;
+
+        // Change button text
+        const btn = modal.querySelector('.modal-btn');
+        btn.textContent = isClear ? '🎁 보물상자 열기!' : '보관하기!';
+        btn.onclick = () => closeItemModal(isClear);
+
+        modal.classList.add('active');
+        fireConfetti(isClear ? 0 : 1500);
+    };
+
     if (mascotImg && item.actionImg) {
+        // Wait for image load if not complete
+        mascotImg.onload = showModalNow;
         mascotImg.src = item.actionImg;
-    }
-
-    modal.querySelector('.modal-icon').textContent = item.icon;
-    const titleEl = modal.querySelector('.modal-title');
-    titleEl.textContent = item.name + ' 발견!';
-    titleEl.className = 'modal-title success';
-
-    let descText = item.desc;
-    if (isClear) {
-        descText += '\n\n🎉 모든 보물을 찾았어요!';
+        if (mascotImg.complete) showModalNow();
     } else {
-        descText += `\n\n(${count}/${REQUIRED_COUNT} 수집 완료)`;
+        showModalNow();
     }
-    modal.querySelector('.modal-desc').textContent = descText;
-
-    // Change button text
-    const btn = modal.querySelector('.modal-btn');
-    btn.textContent = isClear ? '🎁 보물상자 열기!' : '보관하기!';
-    btn.onclick = () => closeItemModal(isClear);
-
-    modal.classList.add('active');
-    fireConfetti(isClear ? 0 : 1500);
 }
 
 function closeItemModal(goToClear) {
@@ -881,7 +893,20 @@ function resetGame() {
 
 // ── Initialization ─────────────────────────────────
 
+function preloadAssets() {
+    const assets = [
+        'assets/images/logo.png',
+        'assets/images/explorer_team.png',
+        ...ITEMS.map(item => item.actionImg)
+    ];
+    assets.forEach(src => {
+        const img = new Image();
+        img.src = src;
+    });
+}
+
 function init() {
+    preloadAssets();
     initStars();
 
     const gameStarted = storageGet('game_started', false);

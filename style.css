@@ -573,7 +573,7 @@ body {
     z-index: 100;
     background: #000;
     height: 100svh;
-    display: flex;
+    /* display: flex moved to .screen.active to prevent auto-show */
     align-items: center;
     justify-content: center;
     overflow: hidden;

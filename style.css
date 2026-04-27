@@ -83,19 +83,10 @@ body {
     z-index: 10;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
-    mask-image: linear-gradient(to bottom, 
-        transparent, 
-        black 50px, 
-        black calc(100% - 50px), 
-        transparent
-    );
-    -webkit-mask-image: linear-gradient(to bottom, 
-        transparent, 
-        black 50px, 
-        black calc(100% - 50px), 
-        transparent
-    );
+    padding-top: calc(env(safe-area-inset-top) + 20px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 30px);
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 .screen.active {
@@ -281,18 +272,8 @@ body {
     color: var(--text-muted);
 }
 
-.start-mascots {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 12px;
-    margin-bottom: 24px;
-    animation: mascotBounce 3s ease-in-out infinite;
-}
-
-@keyframes mascotBounce {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-8px); }
+.start-mascots-team img {
+    filter: drop-shadow(0 4px 15px rgba(0,0,0,0.4));
 }
 
 .start-title {

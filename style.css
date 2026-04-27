@@ -983,3 +983,130 @@ body {
     .start-rules { margin-bottom: 20px; }
     .start-rules .rule { padding: 8px 12px; font-size: 0.82rem; }
 }
+
+/* ================================================================
+   MINI-GAMES
+   ================================================================ */
+
+.mg-container {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.mg-container.active {
+    display: flex;
+}
+
+/* 1. Timing Key */
+.mg-key-target {
+    font-size: 4rem;
+    cursor: pointer;
+    position: absolute;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0 0 10px rgba(244, 169, 64, 0.5));
+}
+
+/* 2. Zipper Bag */
+.mg-zipper-track {
+    width: 240px;
+    height: 60px;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 30px;
+    position: relative;
+    margin-top: 40px;
+}
+.mg-zipper-handle {
+    width: 60px;
+    height: 60px;
+    background: var(--accent-gold);
+    border-radius: 50%;
+    position: absolute;
+    top: -2px;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: var(--glow-gold);
+    touch-action: none;
+}
+
+/* 3. Scratch Map */
+#mg-scratch-canvas {
+    width: 280px;
+    height: 200px;
+    background: #fff;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    touch-action: none;
+}
+
+/* 4. Spotlight Lantern */
+.mg-spotlight-area {
+    width: 100%;
+    height: 300px;
+    background: #000;
+    position: relative;
+    border-radius: var(--radius-md);
+    cursor: crosshair;
+    overflow: hidden;
+}
+.mg-spotlight-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), transparent 60px, rgba(0,0,0,0.95) 100px);
+    pointer-events: none;
+}
+.mg-lantern-hidden {
+    position: absolute;
+    font-size: 3rem;
+    opacity: 0.1;
+    transition: opacity 0.3s;
+}
+.mg-lantern-hidden.found {
+    opacity: 1;
+    filter: drop-shadow(0 0 20px var(--accent-gold));
+}
+
+/* 5. Shake Gem */
+.mg-rock {
+    font-size: 6rem;
+    transition: transform 0.1s;
+    filter: drop-shadow(0 0 20px rgba(0,0,0,0.5));
+    user-select: none;
+}
+.mg-rock.shaking {
+    animation: rockShake 0.1s infinite;
+}
+@keyframes rockShake {
+    0% { transform: translate(0,0); }
+    25% { transform: translate(-5px, 5px); }
+    50% { transform: translate(5px, -5px); }
+    75% { transform: translate(-5px, -5px); }
+    100% { transform: translate(5px, 5px); }
+}
+
+.mg-instructions {
+    font-size: 0.95rem;
+    color: var(--accent-gold);
+    margin-top: 20px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.4;
+    word-break: keep-all;
+}
+
+.mg-progress-text {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-top: 10px;
+    color: #fff;
+}

@@ -145,16 +145,17 @@
 
     <!-- Overlay -->
     <div class="scan-overlay">
-        <!-- Scan Frame -->
-        <div class="scan-frame"></div>
-        <div class="scan-line"></div>
-
-        <!-- Hint with mascot -->
-        <div class="scan-hint">
-            <div class="mascot-clip mascot-xs"><img src="assets/images/raebi.png" alt="래비"></div>
-            <span>보물 마커를 찾아 스캔해!</span>
+        <div class="scan-frame">
+            <div class="scan-line"></div>
+            <div class="scan-corner tl"></div>
+            <div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div>
+            <div class="scan-corner br"></div>
         </div>
-
+        <div class="scan-hint">
+            <img src="assets/images/raebi.png" alt="Mascot">
+            <span>마커를 사각형 안에 맞춰주세요!</span>
+        </div>
         <!-- Close button -->
         <div class="scan-bottom">
             <button class="btn btn-outline" onclick="closeScanner()">✕ 취소</button>
@@ -529,10 +530,14 @@ function openScanner() {
 
 function startFreshScanner() {
     html5QrScanner = new Html5Qrcode('reader');
+    const qrBoxSize = Math.min(window.innerWidth * 0.7, 250);
+    
     const config = {
-        fps: 15,
-        qrbox: { width: 220, height: 220 },
-        aspectRatio: window.innerHeight / window.innerWidth
+        fps: 20,
+        qrbox: { width: qrBoxSize, height: qrBoxSize },
+        formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
+        aspectRatio: 1.0,
+        rememberLastUsedCamera: true
     };
 
     html5QrScanner.start(
@@ -541,10 +546,20 @@ function startFreshScanner() {
         onScanSuccess
     ).then(() => {
         scannerInitialized = true;
+        document.querySelector('.scan-frame').style.borderColor = 'var(--accent-gold)';
     }).catch(err => {
         console.error('Camera error:', err);
-        alert('카메라 접근 권한이 필요합니다.\n설정에서 카메라 권한을 허용해주세요.');
-        closeScanner();
+        // If 'environment' fails, try generic
+        html5QrScanner.start(
+            { facingMode: 'user' }, 
+            config, 
+            onScanSuccess
+        ).then(() => {
+            scannerInitialized = true;
+        }).catch(e => {
+            alert('카메라를 시작할 수 없습니다.\n권한 설정이나 브라우저 환경을 확인해주세요.');
+            closeScanner();
+        });
     });
 }
 

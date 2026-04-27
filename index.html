@@ -530,11 +530,10 @@ function openScanner() {
 
 function startFreshScanner() {
     html5QrScanner = new Html5Qrcode('reader');
-    const qrBoxSize = Math.min(window.innerWidth * 0.7, 250);
-    
+    const qrBoxSize = 250;
     const config = {
         fps: 20,
-        qrbox: { width: qrBoxSize, height: qrBoxSize },
+        qrbox: qrBoxSize, // Setting as a number or {width, height} restricts the scan area
         formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
         aspectRatio: 1.0,
         rememberLastUsedCamera: true

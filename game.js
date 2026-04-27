@@ -21,7 +21,10 @@ function initGameElements() {
         desc: document.getElementById('mg-desc'),
         score: document.getElementById('mg-score'),
         timer: document.getElementById('mg-timer'),
-        lives: document.getElementById('mg-lives')
+        lives: document.getElementById('mg-lives'),
+        intro: document.getElementById('mg-intro'),
+        introGuide: document.getElementById('mg-intro-guide'),
+        introIcon: document.getElementById('mg-intro-icon')
     };
 }
 
@@ -72,17 +75,58 @@ function openMiniGame(type, code) {
     resetGameUI(); 
     window.ondevicemotion = null; 
 
+    // Show Intro Guide first
+    showIntroGuide(type);
+}
+
+function showIntroGuide(type) {
+    elements.intro.style.display = 'flex';
+    
+    let guide = "";
+    let icon = "🎮";
+    
+    switch(type) {
+        case 'key':
+            icon = "🔑";
+            guide = "움직이는 바늘이 초록색 영역에 왔을 때<br>화면을 터치하세요! (3번 성공)";
+            break;
+        case 'bag':
+            icon = "🎒";
+            guide = "가방을 좌우로 움직여 떨어지는 도구를<br>10개 잡으세요! 💣폭탄은 피하세요.";
+            break;
+        case 'map':
+            icon = "🗺️";
+            guide = "지도의 조각들이 반짝이는 순서를<br>잘 기억했다가 그대로 따라 누르세요!";
+            break;
+        case 'lantern':
+            icon = "🔦";
+            guide = "손전등을 움직여 숨어있는 유령을 찾아<br>빛의 중심에 1초간 고정시키세요!";
+            break;
+        case 'gem':
+            icon = "💎";
+            guide = "1단계: 바위를 연타해 부수세요!<br>2단계: 스마트폰을 흔들어 먼지를 터세요!";
+            break;
+    }
+    
+    elements.introIcon.textContent = icon;
+    elements.introGuide.innerHTML = guide;
+}
+
+function startMiniGameLogic() {
+    elements.intro.style.display = 'none';
+    haptic('click');
+
     const onWin = () => finishMiniGame('✨ 성공!', '#4ade80', true);
     const onLose = () => finishMiniGame('💦 실패', '#ef4444', false);
 
     // Map item IDs to game types
-    switch(type) {
+    switch(currentGameType) {
         case 'key':     playLockpick(onWin, onLose); break;
         case 'bag':     playCatch(onWin, onLose); break;
         case 'map':     playSimon(onWin, onLose); break;
         case 'lantern': playSpotlight(onWin, onLose); break;
         case 'gem':     playMash(onWin, onLose); break;
-        default:        playLockpick(onWin, onLose); // Fallback
+        default:        playLockpick(onWin, onLose);
     }
 }
 
@@ -101,6 +145,7 @@ function resetGameUI() {
     });
     
     elements.resultOverlay.style.display = 'none';
+    if (elements.intro) elements.intro.style.display = 'none';
     elements.container.classList.remove('mg-shake'); 
     elements.container.classList.remove('flash-success');
     elements.container.style.pointerEvents = 'auto';

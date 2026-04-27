@@ -190,6 +190,15 @@
         <p id="mg-desc">게임 설명</p>
         
         <div id="mg-container" class="mg-container">
+            <!-- Intro Overlay -->
+            <div id="mg-intro" class="result-overlay" style="display: none; background: rgba(5, 11, 20, 0.95); z-index: 160;">
+                <div class="mg-intro-content">
+                    <div id="mg-intro-icon" style="font-size: 3rem; margin-bottom: 12px;">🎮</div>
+                    <div id="mg-intro-guide" style="color: #fff; font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; line-height: 1.5; word-break: keep-all;"></div>
+                    <button class="btn btn-gold" onclick="startMiniGameLogic()" style="padding: 12px 30px;">시작하기!</button>
+                </div>
+            </div>
+
             <div id="mg-result" class="result-overlay">
                 <div id="result-text" class="result-msg">성공!</div>
                 <button id="retry-btn" class="retry-btn" onclick="retryMiniGame()" style="display:none;">🔄 다시 도전하기</button>

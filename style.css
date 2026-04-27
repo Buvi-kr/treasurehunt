@@ -78,15 +78,16 @@ body {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
+    height: 100svh;
     flex-direction: column;
     align-items: center;
     z-index: 10;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding-top: calc(env(safe-area-inset-top) + 20px);
-    padding-bottom: calc(env(safe-area-inset-bottom) + 30px);
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-top: calc(env(safe-area-inset-top) + 10px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+    padding-left: 16px;
+    padding-right: 16px;
 }
 
 .screen.active {
@@ -188,7 +189,7 @@ body {
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
-    padding: 24px 20px;
+    padding: 16px 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
                 inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
@@ -239,7 +240,7 @@ body {
 
 #screen-start {
     justify-content: center;
-    padding: 60px 24px 40px;
+    padding: 20px 16px;
     text-align: center;
     background: linear-gradient(180deg, 
         rgba(10, 22, 40, 0.3) 0%, 
@@ -283,16 +284,16 @@ body {
 }
 
 .start-subtitle {
-    font-size: 1rem;
+    font-size: 0.85rem;
     color: var(--text-secondary);
-    margin-bottom: 28px;
+    margin-bottom: 20px;
 }
 
 .start-rules {
     text-align: left;
     width: 100%;
     max-width: 320px;
-    margin: 0 auto 32px;
+    margin: 0 auto 16px;
 }
 
 .start-rules .rule {
@@ -320,7 +321,7 @@ body {
 
 #screen-inventory {
     justify-content: flex-start;
-    padding: 60px 20px 40px;
+    padding: 20px 16px;
     background: linear-gradient(180deg, 
         rgba(10, 22, 40, 0.2) 0%, 
         rgba(10, 22, 40, 0.9) 100%
@@ -403,8 +404,8 @@ body {
 .inv-panel {
     width: 100%;
     max-width: 340px;
-    padding: 28px 20px;
-    margin-bottom: 20px;
+    padding: 16px 16px;
+    margin-bottom: 12px;
     text-align: center;
 }
 
@@ -451,15 +452,15 @@ body {
 }
 
 .item-icon-wrap {
-    width: 72px;
-    height: 72px;
+    width: 60px;
+    height: 60px;
     border-radius: var(--radius-full);
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(255,255,255,0.03);
     border: 2px dashed rgba(255,255,255,0.12);
-    font-size: 2rem;
+    font-size: 1.6rem;
     transition: all var(--transition-bounce);
     position: relative;
 }
@@ -518,7 +519,7 @@ body {
 }
 
 .inv-mascot-msg span {
-    font-size: 0.88rem;
+    font-size: 0.8rem;
     color: var(--accent-gold);
     font-weight: 600;
 }

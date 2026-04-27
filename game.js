@@ -76,7 +76,8 @@ function openMiniGame(type, code) {
     window.ondevicemotion = null; 
 
     // Show Intro Guide first
-    showIntroGuide(type);
+    // showIntroGuide(type);
+    startMiniGameLogic(); // Start game immediately
 }
 
 function showIntroGuide(type) {
@@ -191,7 +192,7 @@ function finishMiniGame(msg, color, isWin) {
 // ── 1. 타이밍 락픽 (Golden Key) ──
 function playLockpick(win, lose) {
     elements.title.textContent = "타이밍 락픽"; 
-    elements.desc.textContent = "초록색 안전 영역에서 탭하세요! (3번)";
+    if (elements.desc) elements.desc.textContent = "초록색 안전 영역에서 탭하세요! (3번)";
     elements.container.innerHTML += `<div style="position:absolute; bottom:50px; width:100%;"><div class="lock-bar"><div id="lp-safe" class="lock-safe"></div><div id="lp-needle" class="lock-needle"></div></div></div>`;
     updateLives(); 
     let successCount = 0; 
@@ -225,7 +226,7 @@ function playLockpick(win, lose) {
 // ── 2. 탐험 도구 캐치 (Explorer Bag) ──
 function playCatch(win, lose) {
     elements.title.textContent = "탐험 도구 캐치"; 
-    elements.desc.textContent = "초록색 도구를 10개 담으세요! 💣피하기";
+    if (elements.desc) elements.desc.textContent = "초록색 도구를 10개 담으세요! 💣피하기";
     elements.container.innerHTML += `<div id="c-player" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:45px; z-index:10;">🎒</div>`;
     updateLives(); 
     let score = 0; 
@@ -288,7 +289,7 @@ function playCatch(win, lose) {
 // ── 3. 기억의 지도 (Treasure Map) ──
 function playSimon(win, lose) {
     elements.title.textContent = "기억의 지도"; 
-    elements.desc.textContent = "반짝이는 조각 순서를 기억하세요! (4회)";
+    if (elements.desc) elements.desc.textContent = "반짝이는 조각 순서를 기억하세요! (4회)";
     let html = '<div class="simon-grid" id="s-grid">';
     for(let i=0; i<9; i++) html += `<div class="simon-btn" data-id="${i}"></div>`;
     elements.container.innerHTML += html + '</div><div id="s-msg" class="simon-turn-msg"></div>';
@@ -363,7 +364,7 @@ function playSimon(win, lose) {
 // ── 4. 어둠 속 추적 (Explorer Lantern) ──
 function playSpotlight(win, lose) {
     elements.title.textContent = "어둠 속 추적"; 
-    elements.desc.textContent = "손전등 중심에 유령을 1초간 맞추세요!";
+    if (elements.desc) elements.desc.textContent = "손전등 중심에 유령을 1초간 맞추세요!";
     elements.container.innerHTML += `<div class="track-gauge-bg"><div id="sl-gauge" class="track-gauge-fill"></div></div>
                                     <div id="sl-bg" style="width:100%; height:100%; background: #000;"></div>
                                     <div id="sl-target" style="position:absolute; font-size:35px; opacity:0; z-index:103;">👻</div>`;
@@ -440,7 +441,7 @@ function playSpotlight(win, lose) {
 // ── 5. 바위 깎고 털기 (Treasure Gem) ──
 function playMash(win, lose) {
     elements.title.textContent = "바위 깎고 털기!"; 
-    elements.desc.textContent = "1단계: 바위를 연타해 부수세요!";
+    if (elements.desc) elements.desc.textContent = "1단계: 바위를 연타해 부수세요!";
     elements.container.innerHTML += `<div class="track-gauge-bg"><div id="m-hp" class="track-gauge-fill" style="background: linear-gradient(90deg, #ef4444, #f4a940); width:100%;"></div></div>
                                     <div class="dust-layer" id="m-dust"></div>
                                     <div class="shake-msg" id="m-msg">📱 스마트폰을 마구 흔들어<br>먼지를 터세요!</div>
@@ -490,7 +491,7 @@ function playMash(win, lose) {
             rock.style.display = 'none';
             dustLayer.style.opacity = '1'; 
             msg.style.display = 'block';
-            elements.desc.textContent = "2단계: 흔들거나 화면을 문지르세요!";
+            if (elements.desc) elements.desc.textContent = "2단계: 흔들거나 화면을 문지르세요!";
             hpBar.style.width = '100%'; 
             hpBar.style.background = '#a9a9a9';
             

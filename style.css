@@ -886,7 +886,6 @@ body {
   border-radius: 4px;
   font-weight: 800;
   font-size: 1.1rem;
-  transform: rotate(-1deg);
   margin: 10px 0;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }

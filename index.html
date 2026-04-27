@@ -179,65 +179,6 @@
 
 
 <!-- ================================================================
-     MODAL: MINI-GAME
-     ================================================================ -->
-<div id="modal-minigame" class="modal">
-    <div class="modal-card" style="max-width: 340px; padding: 24px 20px;">
-        <div id="mg-header" style="margin-bottom: 20px;">
-            <h2 class="modal-title success" id="mg-title">미션 시작!</h2>
-            <p class="modal-desc" id="mg-desc" style="margin-bottom:0;">아이템을 획득하기 위한 미션을 완료하세요.</p>
-        </div>
-
-        <div id="mg-body" style="height: 300px; width: 100%; position: relative; background: rgba(0,0,0,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-            
-            <!-- 1. Key (Timing) -->
-            <div id="mg-key" class="mg-container">
-                <div class="mg-key-target" id="mg-key-obj">🔑</div>
-                <div class="mg-instructions">도망가는 열쇠를<br>3번 터치해서 잡으세요!</div>
-                <div class="mg-progress-text" id="mg-key-progress">0 / 3</div>
-            </div>
-
-            <!-- 2. Bag (Swipe) -->
-            <div id="mg-bag" class="mg-container">
-                <div style="font-size: 5rem; margin-bottom: 10px;">🎒</div>
-                <div class="mg-instructions">열린 가방의 지퍼를<br>오른쪽 끝까지 당겨서 닫으세요!</div>
-                <div class="mg-zipper-track" id="mg-zipper-track">
-                    <div class="mg-zipper-handle" id="mg-zipper-handle">⇥</div>
-                </div>
-            </div>
-
-            <!-- 3. Map (Scratch) -->
-            <div id="mg-map" class="mg-container">
-                <canvas id="mg-scratch-canvas"></canvas>
-                <div class="mg-instructions">지도의 흙먼지를<br>손가락으로 쓱쓱 지우세요!</div>
-            </div>
-
-            <!-- 4. Lantern (Spotlight) -->
-            <div id="mg-lantern" class="mg-container" style="width: 100%;">
-                <div class="mg-spotlight-area" id="mg-spotlight-area">
-                    <div class="mg-lantern-hidden" id="mg-lantern-hidden">🔦</div>
-                    <div class="mg-spotlight-overlay" id="mg-spotlight-overlay"></div>
-                </div>
-                <div class="mg-instructions">어둠 속 어딘가에 숨겨진<br>랜턴을 찾아서 터치하세요!</div>
-            </div>
-
-            <!-- 5. Gem (Shake) -->
-            <div id="mg-gem" class="mg-container">
-                <div class="mg-rock" id="mg-rock-obj">🪨</div>
-                <div class="mg-instructions" id="mg-gem-hint">스마트폰을 마구 흔들어서<br>바위를 깨트리세요!</div>
-                <button class="btn btn-gold" id="btn-shake-start" style="margin-top: 20px; display: none;">채굴 시작하기</button>
-            </div>
-
-        </div>
-
-        <div style="margin-top: 20px;">
-            <button class="btn btn-outline btn-block" onclick="cancelMiniGame()">미션 포기하기</button>
-        </div>
-    </div>
-</div>
-
-
-<!-- ================================================================
      MODAL: ERROR / DUPLICATE
      ================================================================ -->
 <div id="modal-error" class="modal">
@@ -589,10 +530,9 @@ function openScanner() {
 function startFreshScanner() {
     html5QrScanner = new Html5Qrcode('reader');
     const config = {
-        fps: 20,
-        qrbox: { width: 250, height: 250 },
-        formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
-        aspectRatio: 1.0
+        fps: 15,
+        qrbox: { width: 220, height: 220 },
+        aspectRatio: window.innerHeight / window.innerWidth
     };
 
     html5QrScanner.start(
@@ -622,259 +562,6 @@ function closeScanner() {
 
     document.getElementById('screen-scanner').classList.remove('active');
     isProcessing = false;
-}
-
-// ── Mini-Games Logic ───────────────────────────────
-
-let currentGame = null;
-let currentItemCode = null;
-let mgState = {};
-
-function startMiniGame(item, code) {
-    currentGame = item.id;
-    currentItemCode = code;
-    mgState = {};
-
-    // 1. Reset all containers
-    document.querySelectorAll('.mg-container').forEach(c => c.classList.remove('active'));
-    
-    // 2. Set Header
-    document.getElementById('mg-title').textContent = item.name + ' 미션!';
-    document.getElementById('mg-desc').textContent = '획득 버튼을 누르기 전 미션을 완료하세요.';
-    
-    // 3. Show specific game UI
-    const container = document.getElementById(`mg-${item.id}`);
-    if (container) container.classList.add('active');
-
-    // 4. Initialize specific game
-    switch(item.id) {
-        case 'key':     initKeyGame(); break;
-        case 'bag':     initBagGame(); break;
-        case 'map':     initMapGame(); break;
-        case 'lantern': initLanternGame(); break;
-        case 'gem':     initGemGame(); break;
-    }
-
-    document.getElementById('modal-minigame').classList.add('active');
-}
-
-function finishMiniGame() {
-    const item = ITEMS.find(it => it.id === currentGame);
-    const scannedQrs = storageGet('scanned_qrs', []);
-    const collectedCount = storageGet('collected_count', 0);
-
-    // Save Progress
-    scannedQrs.push(currentItemCode);
-    const newCount = collectedCount + 1;
-    storageSet('scanned_qrs', scannedQrs);
-    storageSet('collected_count', newCount);
-
-    if (newCount >= REQUIRED_COUNT) {
-        storageSet('game_cleared', true);
-        sound.playFanfare();
-        haptic('clear');
-        showItemModal(item, newCount, true);
-    } else {
-        sound.playItemGet();
-        haptic('item');
-        showItemModal(item, newCount, false);
-    }
-
-    document.getElementById('modal-minigame').classList.remove('active');
-    cleanupMiniGame();
-}
-
-function cancelMiniGame() {
-    document.getElementById('modal-minigame').classList.remove('active');
-    isProcessing = false;
-    cleanupMiniGame();
-}
-
-function cleanupMiniGame() {
-    currentGame = null;
-    currentItemCode = null;
-    mgState = {};
-    // Remove global listeners
-    window.ontouchmove = null;
-    window.ontouchend = null;
-}
-
-// ── 1. Key Game (Timing) ──
-function initKeyGame() {
-    mgState.score = 0;
-    const obj = document.getElementById('mg-key-obj');
-    const prog = document.getElementById('mg-key-progress');
-    prog.textContent = "0 / 3";
-    
-    const moveKey = () => {
-        if (currentGame !== 'key') return;
-        const x = Math.random() * 80 + 10;
-        const y = Math.random() * 60 + 20;
-        obj.style.left = x + '%';
-        obj.style.top = y + '%';
-    };
-
-    obj.onclick = (e) => {
-        e.stopPropagation();
-        mgState.score++;
-        haptic('click');
-        sound.playClick();
-        prog.textContent = `${mgState.score} / 3`;
-        
-        if (mgState.score >= 3) {
-            finishMiniGame();
-        } else {
-            moveKey();
-        }
-    };
-    moveKey();
-}
-
-// ── 2. Bag Game (Swipe) ──
-function initBagGame() {
-    const track = document.getElementById('mg-zipper-track');
-    const handle = document.getElementById('mg-zipper-handle');
-    handle.style.left = '0px';
-    
-    let isDragging = false;
-    const trackWidth = track.clientWidth - 60;
-
-    const onMove = (clientX) => {
-        if (!isDragging) return;
-        const rect = track.getBoundingClientRect();
-        let x = clientX - rect.left - 30;
-        x = Math.max(0, Math.min(x, trackWidth));
-        handle.style.left = x + 'px';
-        
-        if (x >= trackWidth - 5) {
-            isDragging = false;
-            finishMiniGame();
-        }
-    };
-
-    handle.ontouchstart = () => { isDragging = true; };
-    window.ontouchmove = (e) => onMove(e.touches[0].clientX);
-    window.ontouchend = () => { isDragging = false; };
-}
-
-// ── 3. Map Game (Scratch) ──
-function initMapGame() {
-    const canvas = document.getElementById('mg-scratch-canvas');
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width = 280;
-    const h = canvas.height = 200;
-
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = '#8b7355';
-    ctx.fillRect(0,0,w,h);
-    ctx.fillStyle = '#6d5a42';
-    for(let i=0; i<100; i++) {
-        ctx.beginPath();
-        ctx.arc(Math.random()*w, Math.random()*h, Math.random()*10, 0, Math.PI*2);
-        ctx.fill();
-    }
-
-    mgState.scratchCount = 0;
-
-    const scratch = (x, y) => {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath();
-        ctx.arc(x, y, 25, 0, Math.PI * 2);
-        ctx.fill();
-        
-        mgState.scratchCount++;
-        if (mgState.scratchCount > 80) { // Simple threshold
-            finishMiniGame();
-        }
-    };
-
-    canvas.ontouchmove = (e) => {
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const x = e.touches[0].clientX - rect.left;
-        const y = e.touches[0].clientY - rect.top;
-        scratch(x, y);
-    };
-}
-
-// ── 4. Lantern Game (Spotlight) ──
-function initLanternGame() {
-    const area = document.getElementById('mg-spotlight-area');
-    const overlay = document.getElementById('mg-spotlight-overlay');
-    const lantern = document.getElementById('mg-lantern-hidden');
-    
-    lantern.classList.remove('found');
-    const x = Math.random() * (area.clientWidth - 60) + 30;
-    const y = Math.random() * (area.clientHeight - 60) + 30;
-    lantern.style.left = x + 'px';
-    lantern.style.top = y + 'px';
-
-    area.ontouchmove = (e) => {
-        e.preventDefault();
-        const rect = area.getBoundingClientRect();
-        const touchX = e.touches[0].clientX - rect.left;
-        const touchY = e.touches[0].clientY - rect.top;
-        overlay.style.setProperty('--x', touchX + 'px');
-        overlay.style.setProperty('--y', touchY + 'px');
-    };
-
-    lantern.ontouchstart = (e) => {
-        e.stopPropagation();
-        lantern.classList.add('found');
-        haptic('item');
-        sound.playItemGet();
-        setTimeout(finishMiniGame, 800);
-    };
-}
-
-// ── 5. Gem Game (Shake) ──
-function initGemGame() {
-    mgState.shakes = 0;
-    const rock = document.getElementById('mg-rock-obj');
-    const hint = document.getElementById('mg-gem-hint');
-    const btn = document.getElementById('btn-shake-start');
-
-    rock.textContent = '🪨';
-
-    const triggerShake = () => {
-        if (currentGame !== 'gem') return;
-        mgState.shakes++;
-        haptic('item');
-        rock.classList.add('shaking');
-        setTimeout(() => rock.classList.remove('shaking'), 200);
-
-        if (mgState.shakes >= 10) {
-            rock.textContent = '💎';
-            hint.textContent = '원석을 발견했어요!';
-            window.removeEventListener('devicemotion', handleMotion);
-            setTimeout(finishMiniGame, 1000);
-        }
-    };
-
-    const handleMotion = (event) => {
-        const acc = event.accelerationIncludingGravity;
-        if (!acc) return;
-        const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-        if (total > 25) { 
-            triggerShake();
-        }
-    };
-
-    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-        btn.style.display = 'block';
-        btn.onclick = () => {
-            DeviceMotionEvent.requestPermission().then(state => {
-                if (state === 'granted') {
-                    window.addEventListener('devicemotion', handleMotion);
-                    btn.style.display = 'none';
-                    hint.textContent = '자, 이제 마구 흔드세요!';
-                }
-            });
-        };
-    } else {
-        window.addEventListener('devicemotion', handleMotion);
-        rock.onclick = triggerShake;
-    }
 }
 
 function onScanSuccess(decodedText) {
@@ -929,9 +616,25 @@ function processQRCode(code) {
         return;
     }
 
-    // 4. New valid scan! Start Mission.
-    const item = ITEMS[collectedCount]; // Get next item based on current count
-    startMiniGame(item, code); // Pass code to save after mission
+    // 4. New valid scan! Collect item.
+    scannedQrs.push(code);
+    const newCount = collectedCount + 1;
+    storageSet('scanned_qrs', scannedQrs);
+    storageSet('collected_count', newCount);
+
+    const item = ITEMS[newCount - 1];
+
+    if (newCount >= REQUIRED_COUNT) {
+        // 🏆 CLEAR!
+        storageSet('game_cleared', true);
+        sound.playFanfare();
+        haptic('clear');
+        showItemModal(item, newCount, true);
+    } else {
+        sound.playItemGet();
+        haptic('item');
+        showItemModal(item, newCount, false);
+    }
 }
 
 // ── Modal System ───────────────────────────────────

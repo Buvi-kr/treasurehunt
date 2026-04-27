@@ -34,9 +34,9 @@
         <div class="mascot-clip"><img src="assets/images/caeti.png" alt="캐티"></div>
     </div>
 
-    <h1 class="start-title title-display">
-        <span class="text-gold">🏔️ 아트밸리</span><br>보물찾기
-    </h1>
+    <div class="start-logo-wrap" style="margin-bottom: 24px;">
+        <img src="assets/images/logo.png" alt="포천아트밸리 천문과학관" style="width: 100%; max-width: 280px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));">
+    </div>
     <p class="start-subtitle">아트밸리 곳곳에 숨겨진 보물을 찾아라!</p>
 
     <div class="start-rules panel">
@@ -75,7 +75,7 @@
 <div id="screen-inventory" class="screen">
 
     <div class="inv-header">
-        <h1 class="inv-title title-display text-gold">🏔️ 아트밸리 보물찾기</h1>
+        <img src="assets/images/logo.png" alt="Logo" style="height: 40px; margin-bottom: 12px;">
         <p class="inv-sub">숨겨진 보물 마커를 찾아 스캔하세요!</p>
     </div>
 
@@ -133,7 +133,6 @@
         <button class="btn btn-gold btn-block btn-scan-main" id="btn-scan" onclick="openScanner()">
             📷 QR 마커 스캔
         </button>
-        <button class="reset-link" onclick="resetGame()">[진행자 전용] 데이터 초기화</button>
     </div>
 
 </div>
@@ -240,8 +239,7 @@
   <div id="cert-area" class="cert-card-premium">
     <!-- 상단 로고 -->
     <div class="cert-logo-wrap">
-        <span class="cert-logo-text">ART VALLEY</span>
-        <div class="cert-logo-sub">TREASURE HUNT</div>
+        <img src="assets/images/logo.png" alt="Logo" style="width: 200px; margin-bottom: 5px;">
     </div>
     <div class="cert-badge-premium">보물찾기 성공 인증서</div>
     
@@ -299,11 +297,11 @@ const VALID_QR_CODES = [
 ];
 
 const ITEMS = [
-    { id: 'key',     name: '황금 열쇠',   icon: '🔑', desc: '보물상자의 자물쇠를 열 열쇠 조각을 찾았어!' },
-    { id: 'bag',     name: '탐험가 가방',  icon: '🎒', desc: '보물을 담을 수 있는 가방을 발견했어!' },
-    { id: 'map',     name: '보물 지도',    icon: '🗺️', desc: '보물의 위치가 그려진 신비한 지도!' },
-    { id: 'lantern', name: '탐험 랜턴',    icon: '🔦', desc: '어두운 곳도 밝혀줄 마법의 랜턴!' },
-    { id: 'gem',     name: '보물 원석',    icon: '💎', desc: '아트밸리의 신비로운 보물 원석!' },
+    { id: 'key',     name: '황금 열쇠',   icon: '🔑', desc: '보물상자의 자물쇠를 열 열쇠 조각을 찾았어!', actionImg: 'assets/images/actions/key.png' },
+    { id: 'bag',     name: '탐험가 가방',  icon: '🎒', desc: '보물을 담을 수 있는 가방을 발견했어!', actionImg: 'assets/images/actions/bag.png' },
+    { id: 'map',     name: '보물 지도',    icon: '🗺️', desc: '보물의 위치가 그려진 신비한 지도!', actionImg: 'assets/images/actions/map.png' },
+    { id: 'lantern', name: '탐험 랜턴',    icon: '🔦', desc: '어두운 곳도 밝혀줄 마법의 랜턴!', actionImg: 'assets/images/actions/lantern.png' },
+    { id: 'gem',     name: '보물 원석',    icon: '💎', desc: '아트밸리의 신비로운 보물 원석!', actionImg: 'assets/images/actions/gem.png' },
 ];
 
 const REQUIRED_COUNT = 5;
@@ -472,21 +470,21 @@ function initStars() {
 
 // ── Confetti ───────────────────────────────────────
 
-function fireConfetti(duration = 3000) {
+function fireConfetti(duration = 2000) {
     if (typeof confetti === 'undefined') return;
     const end = Date.now() + duration;
     const colors = ['#f4a940', '#ffd700', '#e87a3a', '#7ec8e3', '#ffffff'];
 
     (function frame() {
         confetti({
-            particleCount: 4,
+            particleCount: 2,
             angle: 60,
             spread: 55,
             origin: { x: 0, y: 0.7 },
             colors: colors
         });
         confetti({
-            particleCount: 4,
+            particleCount: 2,
             angle: 120,
             spread: 55,
             origin: { x: 1, y: 0.7 },
@@ -500,13 +498,13 @@ function fireBigConfetti() {
     if (typeof confetti === 'undefined') return;
     // Big burst
     confetti({
-        particleCount: 100,
-        spread: 100,
+        particleCount: 50,
+        spread: 80,
         origin: { x: 0.5, y: 0.5 },
         colors: ['#f4a940', '#ffd700', '#e87a3a', '#7ec8e3', '#ffffff', '#4ade80']
     });
     // Then continuous
-    fireConfetti(5000);
+    fireConfetti(3000);
 }
 
 // ── QR Scanner ─────────────────────────────────────
@@ -661,6 +659,13 @@ function closeErrorModal() {
 
 function showItemModal(item, count, isClear) {
     const modal = document.getElementById('modal-item');
+    
+    // Update mascot action image
+    const mascotImg = modal.querySelector('.mascot-clip img');
+    if (mascotImg && item.actionImg) {
+        mascotImg.src = item.actionImg;
+    }
+
     modal.querySelector('.modal-icon').textContent = item.icon;
     const titleEl = modal.querySelector('.modal-title');
     titleEl.textContent = item.name + ' 발견!';

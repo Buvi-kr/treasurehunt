@@ -16,6 +16,8 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="game.css">
+    <script src="game.js"></script>
 </head>
 <body>
 
@@ -175,6 +177,31 @@
         <div class="modal-title success">황금 열쇠 발견!</div>
         <div class="modal-desc">보물상자의 자물쇠를 열 열쇠 조각!</div>
         <button class="btn btn-gold modal-btn" onclick="closeItemModal(false)">보관하기!</button>
+    </div>
+</div>
+
+
+<!-- ================================================================
+     MODAL: MINI-GAME (Premium)
+     ================================================================ -->
+<div id="modal-minigame" class="modal">
+    <div class="mg-modal-card">
+        <h2 id="mg-title">게임 제목</h2>
+        <p id="mg-desc">게임 설명</p>
+        
+        <div id="mg-container" class="mg-container">
+            <div id="mg-result" class="result-overlay">
+                <div id="result-text" class="result-msg">성공!</div>
+                <button id="retry-btn" class="retry-btn" onclick="retryMiniGame()" style="display:none;">🔄 다시 도전하기</button>
+            </div>
+        </div>
+        
+        <div class="mg-status">
+            <span id="mg-timer"></span>
+            <span id="mg-score"></span>
+            <span id="mg-lives" class="mg-lives"></span>
+        </div>
+        <button class="mg-close-btn" onclick="closeMiniGame()">나가기</button>
     </div>
 </div>
 
@@ -530,10 +557,11 @@ function openScanner() {
 
 function startFreshScanner() {
     html5QrScanner = new Html5Qrcode('reader');
-    const qrBoxSize = 250;
+    const qrBoxSize = 260; // Perfectly match the CSS frame
+    
     const config = {
         fps: 20,
-        qrbox: qrBoxSize, // Setting as a number or {width, height} restricts the scan area
+        qrbox: qrBoxSize, 
         formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
         aspectRatio: 1.0,
         rememberLastUsedCamera: true
@@ -630,16 +658,24 @@ function processQRCode(code) {
         return;
     }
 
-    // 4. New valid scan! Collect item.
+    // 4. New valid scan! Start Mission.
+    const item = ITEMS[collectedCount]; // Get next item based on current count
+    openMiniGame(item.id, code);
+}
+
+// ── Bridge to game.js ──────────────────────────────
+
+function saveItemAfterMission(itemId, code) {
+    const scannedQrs = storageGet('scanned_qrs', []);
+    const collectedCount = storageGet('collected_count', 0);
+    const item = ITEMS.find(it => it.id === itemId);
+
     scannedQrs.push(code);
     const newCount = collectedCount + 1;
     storageSet('scanned_qrs', scannedQrs);
     storageSet('collected_count', newCount);
 
-    const item = ITEMS[newCount - 1];
-
     if (newCount >= REQUIRED_COUNT) {
-        // 🏆 CLEAR!
         storageSet('game_cleared', true);
         sound.playFanfare();
         haptic('clear');

@@ -1,0 +1,342 @@
+/* ================================================================
+   PREMIUM MINI-GAME ENGINE STYLES
+   ================================================================ */
+
+.mg-modal-card {
+    background: linear-gradient(180deg, #1a2a44, #111d30);
+    padding: 24px;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 380px;
+    border: 2px solid rgba(244, 169, 64, 0.4);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+#mg-title {
+    color: #ffd700;
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+    font-weight: 900;
+    text-shadow: 0 2px 10px rgba(255,215,0,0.4);
+}
+
+#mg-desc {
+    color: #a8b8d0;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    word-break: keep-all;
+    line-height: 1.4;
+    height: 38px;
+}
+
+.mg-container {
+    width: 100%;
+    height: 280px;
+    background: #050b14;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.9);
+    border: 2px solid #2a3b54;
+    transition: 0.3s;
+}
+
+.mg-status {
+    display: flex;
+    justify-content: space-between;
+    color: #f4a940;
+    font-weight: bold;
+    font-size: 1.1rem;
+    padding: 0 10px;
+    margin-bottom: 10px;
+}
+
+.mg-lives {
+    letter-spacing: 2px;
+}
+
+/* Result Overlays */
+.result-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 150;
+    backdrop-filter: blur(4px);
+}
+
+.result-msg {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 20px;
+    animation: mgPopIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.retry-btn {
+    padding: 12px 24px;
+    font-size: 1.1rem;
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.mg-close-btn {
+    margin-top: 5px;
+    padding: 12px 20px;
+    background: transparent;
+    color: #8a9bb5;
+    border: 1px solid #4a5a73;
+    border-radius: 12px;
+    font-weight: bold;
+    width: 100%;
+}
+
+/* Animations */
+@keyframes mgPopIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.mg-shake {
+    animation: mgShake 0.4s both;
+}
+
+@keyframes mgShake {
+    10%, 90% { transform: translate3d(-2px, 0, 0); }
+    20%, 80% { transform: translate3d(4px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+    40%, 60% { transform: translate3d(6px, 0, 0); }
+}
+
+.flash-success {
+    animation: flashGreen 0.5s ease-out;
+}
+
+@keyframes flashGreen {
+    0% { box-shadow: inset 0 0 0px #4ade80; border-color: #4ade80; }
+    50% { box-shadow: inset 0 0 40px #4ade80; border-color: #4ade80; }
+    100% { box-shadow: inset 0 0 0px transparent; border-color: #2a3b54; }
+}
+
+.particle {
+    position: absolute;
+    pointer-events: none;
+    animation: flyOut 0.8s ease-out forwards;
+    z-index: 140;
+    font-size: 20px;
+}
+
+@keyframes flyOut {
+    0% { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+}
+
+/* 1. Timing Lockpick */
+.lock-bar {
+    position: absolute;
+    bottom: 40px;
+    left: 10%;
+    width: 80%;
+    height: 34px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 17px;
+}
+
+.lock-safe {
+    position: absolute;
+    left: 40%;
+    top: 0;
+    width: 20%;
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #4ade80);
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.6);
+    border-radius: 17px;
+}
+
+.lock-needle {
+    position: absolute;
+    left: 0%;
+    top: -4px;
+    width: 6px;
+    height: 42px;
+    background: #fff;
+    box-shadow: 0 0 10px #fff;
+    border-radius: 3px;
+    animation: sweep 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes sweep {
+    0% { left: 0%; transform: translateX(0); }
+    100% { left: 100%; transform: translateX(-100%); }
+}
+
+/* 2. Catch Game Items */
+.item-good {
+    border: 3px solid #4ade80;
+    box-shadow: 0 0 15px #4ade80;
+    border-radius: 50%;
+    padding: 2px;
+    background: rgba(74, 222, 128, 0.2);
+}
+
+.item-bad {
+    border: 3px solid #ef4444;
+    box-shadow: 0 0 15px #ef4444;
+    border-radius: 50%;
+    padding: 2px;
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* 3. Simon Grid */
+.simon-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4px;
+    padding: 10px;
+    height: 100%;
+    transition: 0.3s;
+}
+
+.simon-btn {
+    background: #1a2a44;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    position: relative;
+    cursor: pointer;
+}
+
+.simon-btn::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    transition: 0.1s;
+    border-radius: 8px;
+}
+
+.simon-btn.active {
+    transform: scale(0.92);
+    z-index: 2;
+    box-shadow: 0 0 20px #f4a940;
+}
+
+.simon-btn.active::after {
+    background: transparent;
+    border: 2px solid #f4a940;
+}
+
+.simon-turn-msg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 20px #000, 0 0 10px #f4a940;
+    z-index: 160;
+    pointer-events: none;
+    opacity: 0;
+    transition: 0.3s;
+    white-space: nowrap;
+}
+
+/* 4. Spotlight Gauge */
+.track-gauge-bg {
+    position: absolute;
+    top: 15px;
+    left: 10%;
+    width: 80%;
+    height: 12px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 6px;
+    z-index: 105;
+    overflow: hidden;
+}
+
+.track-gauge-fill {
+    height: 100%;
+    width: 0%;
+    background: #f4a940;
+    transition: width 0.1s;
+}
+
+/* 5. Rock Mash */
+.rock-wrap {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 180px;
+    height: 180px;
+    cursor: pointer;
+}
+
+.mash-gem {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 80px;
+    transition: 0.2s;
+}
+
+.mash-rock {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 130px;
+    transition: 0.1s;
+    text-shadow: 0 10px 20px rgba(0,0,0,0.8);
+}
+
+.shake-msg {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #f4a940;
+    font-weight: bold;
+    text-shadow: 0 0 10px #000;
+    display: none;
+    width: 100%;
+    text-align: center;
+    font-size: 1.1rem;
+    animation: pulse 1s infinite alternate;
+    z-index: 110;
+    pointer-events: none;
+}
+
+@keyframes pulse {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    100% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.dust-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(169,169,169,0.9) 0%, rgba(100,100,100,0.6) 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 105;
+}

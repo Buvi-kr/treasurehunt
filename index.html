@@ -557,11 +557,15 @@ function openScanner() {
 
 function startFreshScanner() {
     html5QrScanner = new Html5Qrcode('reader');
-    const qrBoxSize = 260; // Perfectly match the CSS frame
+    
+    // Dynamic qrbox based on screen size (matches CSS 80% max 320px)
+    const viewWidth = window.innerWidth;
+    const qrBoxWidth = Math.min(viewWidth * 0.8, 320);
+    const qrBoxHeight = 320;
     
     const config = {
         fps: 20,
-        qrbox: qrBoxSize, 
+        qrbox: { width: qrBoxWidth, height: qrBoxHeight }, 
         formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
         aspectRatio: 1.0,
         rememberLastUsedCamera: true

@@ -604,9 +604,13 @@ body {
 
 .scan-frame {
     position: relative;
-    width: 260px; height: 260px;
-    border: none;
-    box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.7);
+    width: 80%;
+    max-width: 320px;
+    height: 320px;
+    border: 1px solid rgba(244, 169, 64, 0.2);
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.3); /* Much lighter overlay */
     pointer-events: none;
     z-index: 115;
 }
@@ -633,7 +637,7 @@ body {
 
 @keyframes scanLineMove {
     0%, 100% { transform: translateY(0); opacity: 0.2; }
-    50%      { transform: translateY(240px); opacity: 1; }
+    50%      { transform: translateY(300px); opacity: 1; }
 }
 
 .scan-hint {

@@ -682,7 +682,15 @@ function processQRCode(code) {
     }
 
     // 4. New valid scan! Start Mission.
-    const item = ITEMS[collectedCount]; // Get next item based on current count
+    const item = ITEMS[collectedCount]; 
+    if (!item) {
+        console.error("아이템 정보를 찾을 수 없습니다. (Index:", collectedCount, ")");
+        isProcessing = false;
+        alert("미션 정보를 불러오지 못했습니다. 앱을 재실행해주세요.");
+        return;
+    }
+    
+    // Ensure the mission modal is ready before opening
     openMiniGame(item.id, code);
 }
 

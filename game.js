@@ -70,6 +70,17 @@ function openMiniGame(type, code) {
     
     currentGameType = type;
     currentItemCode = code;
+    
+    // Set Title immediately for the Intro Phase
+    const item = {
+        'key': '황금 열쇠 미션',
+        'bag': '탐험가 가방 미션',
+        'map': '기억의 지도 미션',
+        'lantern': '어둠 속 추적 미션',
+        'gem': '보물 원석 미션'
+    };
+    elements.title.textContent = item[type] || "보물 미션";
+    
     elements.modal.classList.add('active');
     
     resetGameUI(); 
@@ -164,15 +175,18 @@ function resetGameUI() {
     cancelAnimationFrame(mgAnimFrame);
     
     // Clear game-specific elements (excluding result overlay and intro)
-    Array.from(elements.container.children).forEach(child => { 
-        if(child.id !== 'mg-result' && child.id !== 'mg-intro') child.remove(); 
-    });
+    if (elements.container) {
+        Array.from(elements.container.children).forEach(child => { 
+            if(child.id !== 'mg-result' && child.id !== 'mg-intro') child.remove(); 
+        });
+        elements.container.classList.remove('mg-shake'); 
+        elements.container.classList.remove('flash-success');
+        elements.container.style.pointerEvents = 'auto';
+    }
     
-    elements.resultOverlay.style.display = 'none';
-    elements.intro.style.display = 'none';
-    elements.container.classList.remove('mg-shake'); 
-    elements.container.classList.remove('flash-success');
-    elements.container.style.pointerEvents = 'auto';
+    if (elements.resultOverlay) elements.resultOverlay.style.display = 'none';
+    if (elements.intro) elements.intro.style.display = 'none';
+    
     elements.score.textContent = ''; 
     elements.timer.textContent = ''; 
     elements.lives.textContent = '';

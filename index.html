@@ -621,25 +621,35 @@ function closeScanner() {
 
 function onScanSuccess(decodedText) {
     if (isProcessing) return;
-    isProcessing = true;
+    isProcessing = true; // 1. 중복 스캔 방지 락 활성화
 
-    // Pause scanner immediately
+    // 2. 스캐너 즉시 일시정지 (안전하게 처리)
     if (html5QrScanner) {
         try {
-            html5QrScanner.pause(true);
+            // getState()를 통해 현재 스캔 중인 경우에만 일시정지 시도
+            if (html5QrScanner.getState && html5QrScanner.getState() === 2) { // 2 = SCANNING
+                html5QrScanner.pause(true); 
+            }
         } catch (e) {
-            console.warn('Pause failed:', e);
+            console.warn('스캐너 일시정지 실패:', e);
         }
     }
 
-    // Give a brief delay for a better "scanning" feel (Haptic + Wait)
     haptic('click');
+    sound.playClick();
     
     setTimeout(() => {
-        // Hide scanner screen
         document.getElementById('screen-scanner').classList.remove('active');
-        // Process game logic
-        processQRCode(decodedText);
+        
+        // 3. 에러 발생 시 락(Lock)을 강제로 풀어주는 안전망
+        try {
+            const cleanCode = (decodedText || "").trim();
+            processQRCode(cleanCode);
+        } catch (error) {
+            console.error("QR 처리 중 치명적 오류:", error);
+            isProcessing = false; // 에러 발생 시 반드시 락 해제
+            alert("게임 로딩 중 오류가 발생했습니다. 다시 스캔해주세요.");
+        }
     }, 600);
 }
 

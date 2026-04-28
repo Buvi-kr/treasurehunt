@@ -138,20 +138,20 @@ function startMiniGameLogic() {
     setTimeout(() => {
         elements.intro.style.display = 'none';
         haptic('click');
-...
 
-    const onWin = () => finishMiniGame('✨ 성공!', '#4ade80', true);
-    const onLose = () => finishMiniGame('💦 실패', '#ef4444', false);
+        const onWin = () => finishMiniGame('✨ 성공!', '#4ade80', true);
+        const onLose = () => finishMiniGame('💦 실패', '#ef4444', false);
 
-    // Map item IDs to game types
-    switch(currentGameType) {
-        case 'key':     playLockpick(onWin, onLose); break;
-        case 'bag':     playCatch(onWin, onLose); break;
-        case 'map':     playSimon(onWin, onLose); break;
-        case 'lantern': playSpotlight(onWin, onLose); break;
-        case 'gem':     playMash(onWin, onLose); break;
-        default:        playLockpick(onWin, onLose);
-    }
+        // Map item IDs to game types
+        switch(currentGameType) {
+            case 'key':     playLockpick(onWin, onLose); break;
+            case 'bag':     playCatch(onWin, onLose); break;
+            case 'map':     playSimon(onWin, onLose); break;
+            case 'lantern': playSpotlight(onWin, onLose); break;
+            case 'gem':     playMash(onWin, onLose); break;
+            default:        playLockpick(onWin, onLose);
+        }
+    }, 500); // 500ms 딜레이 후 게임 실행
 }
 
 function retryMiniGame() { 

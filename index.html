@@ -715,6 +715,15 @@ function saveItemAfterMission(itemId, code) {
 
     if (newCount >= REQUIRED_COUNT) {
         storageSet('game_cleared', true);
+        
+        // 🌟 완료 시점의 시간을 한 번만 기록 (이미 기록되어 있다면 유지)
+        if (!storageGet('clear_date', null)) {
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            storageSet('clear_date', dateStr);
+            storageSet('end_time', Date.now());
+        }
+
         sound.playFanfare();
         haptic('clear');
         showItemModal(item, newCount, true);
@@ -809,8 +818,8 @@ function goToCertificate() {
 
     const name = storageGet('explorer_name', '탐험가');
     const startTime = storageGet('start_time', Date.now());
-    const endTime = Date.now();
-    const durationMs = endTime - startTime;
+    const endTime = storageGet('end_time', Date.now()); // 저장된 종료 시간 사용
+    const durationMs = Math.max(0, endTime - startTime);
     
     // Format time (MM:SS)
     const minutes = Math.floor(durationMs / 60000);
@@ -833,9 +842,12 @@ function goToCertificate() {
     
     document.getElementById('grade-msg').textContent = message;
 
-    // Date
-    const now = new Date();
-    const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    // Date (저장된 날짜가 있으면 사용, 없으면 현재 시간)
+    let dateStr = storageGet('clear_date', null);
+    if (!dateStr) {
+        const now = new Date();
+        dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    }
     document.getElementById('res-date').textContent = dateStr;
 }
 

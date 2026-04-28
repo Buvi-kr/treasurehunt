@@ -847,13 +847,13 @@ body {
   background: #fff;
   border: 10px solid #FFD700; /* 금색 테두리 */
   border-radius: 32px;
-  padding: 22px 20px; /* 위아래 줄임 */
+  padding: 15px 20px; /* 위아래 더 줄임 */
   width: 100%;
   max-width: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px; /* 간격 줄임 */
+  gap: 4px; /* 간격 더 줄임 */
   color: #333;
   box-shadow: 0 20px 60px rgba(0,0,0,0.6);
   position: relative;
@@ -882,19 +882,19 @@ body {
 .cert-badge-premium {
   background: #a67c00;
   color: #fff;
-  padding: 8px 24px;
+  padding: 6px 20px;
   border-radius: 4px;
   font-weight: 800;
-  font-size: 1.1rem;
-  margin: 10px 0;
+  font-size: 1rem;
+  margin: 4px 0;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .cert-nick-wrap { text-align: center; width: 100%; }
-.cert-nick { font-size: 2.2rem; font-weight: 800; color: #000; display: block; }
-.cert-sub { font-size: 14px; color: #666; font-weight: 600; display: block; }
+.cert-nick { font-size: 1.8rem; font-weight: 800; color: #000; display: block; }
+.cert-sub { font-size: 13px; color: #666; font-weight: 600; display: block; }
 
-.cert-stats-row { display: flex; gap: 10px; width: 100%; margin: 10px 0; }
+.cert-stats-row { display: flex; gap: 8px; width: 100%; margin: 4px 0; }
 .c-stat-box {
   flex: 1; background: #f4f7f9; border-radius: 14px; padding: 12px; text-align: center;
 }
@@ -912,7 +912,7 @@ body {
   color: #0076ad;
   font-weight: 700;
   text-align: center;
-  margin-top: 10px;
+  margin-top: 4px;
   word-break: keep-all;
   border: 1px dashed rgba(0, 242, 254, 0.3);
   width: 90%;
@@ -921,7 +921,7 @@ body {
   color: #005a87;
 }
 
-.end-mascot-cert { width: 140px; height: 140px; object-fit: contain; }
+.end-mascot-cert { width: 110px; height: 110px; object-fit: contain; }
 
 .cert-actions-premium {
     width: 100%;

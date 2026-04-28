@@ -391,14 +391,17 @@ function playSimon(win, lose) {
     // [핵심 1] 좀비 타이머 방지: 이 게임판(s-grid)이 DOM에 여전히 붙어있는지 확인
     const isAlive = () => document.getElementById('s-grid') !== null;
 
+    let currentRound = 1; // 🌟 라운드 추적 변수 분리
+
     const showSequence = () => {
-        if (!isAlive()) return; // 창을 닫았거나 재도전했다면 즉시 실행 중단
+        if (!isAlive()) return;
+        clearTimeout(mgTimeout); // 이전 타이머 제거
         
         playerStep = 0; 
         let step = 0; 
         
         btns.forEach(b => b.classList.remove('active'));
-        elements.container.style.pointerEvents = 'none'; // 시퀀스 재생 중 터치 완벽 차단
+        elements.container.style.pointerEvents = 'none';
         
         const grid = document.getElementById('s-grid');
         if(grid) grid.style.filter = 'brightness(0.5)';
@@ -422,7 +425,7 @@ function playSimon(win, lose) {
                 step++;
                 mgTimeout = setTimeout(nextStep, 800);
             } else {
-                elements.container.style.pointerEvents = 'auto'; // 터치 허용
+                elements.container.style.pointerEvents = 'auto';
                 if(grid) grid.style.filter = 'brightness(1)';
                 if(turnMsg) {
                     turnMsg.textContent = "👇 따라 누르세요!";
@@ -438,10 +441,8 @@ function playSimon(win, lose) {
 
     const generateSequence = () => {
         if (!isAlive()) return;
-        const round = sequence.length + 1;
-        
-        // 🌟 고정된 시퀀스 적용 (5 / 2,8 / 9,4,3 / 7,2,8,4)
-        // 인덱스 기준: 5->4, 2->1, 8->7, 9->8, 4->3, 3->2, 7->6
+        clearTimeout(mgTimeout);
+
         const fixedSequences = [
             [4],             // 1단계: 5
             [1, 7],          // 2단계: 2, 8
@@ -449,9 +450,8 @@ function playSimon(win, lose) {
             [6, 1, 7, 3]     // 4단계: 7, 2, 8, 4
         ];
         
-        sequence = fixedSequences[round - 1] || [];
-        
-        elements.score.textContent = `단계: ${round}/4`;
+        sequence = fixedSequences[currentRound - 1] || [];
+        elements.score.textContent = `단계: ${currentRound}/4`;
         showSequence();
     };
 
@@ -475,9 +475,10 @@ function playSimon(win, lose) {
                     elements.container.style.pointerEvents = 'none'; 
                     if(turnMsg) turnMsg.style.opacity = '0'; 
 
-                    if (sequence.length === 4) {
+                    if (currentRound === 4) {
                         setTimeout(() => { if(isAlive()) win(); }, 600);
                     } else {
+                        currentRound++; // 🌟 라운드 증가
                         elements.container.classList.add('flash-success');
                         setTimeout(() => { if(isAlive()) elements.container.classList.remove('flash-success'); }, 400);
                         mgTimeout = setTimeout(generateSequence, 800);

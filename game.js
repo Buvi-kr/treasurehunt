@@ -75,9 +75,8 @@ function openMiniGame(type, code) {
     resetGameUI(); 
     window.ondevicemotion = null; 
 
-    // Show Intro Guide first
-    // showIntroGuide(type);
-    startMiniGameLogic(); // Start game immediately
+    // Step 1: Show Intro Guide
+    showIntroGuide(type);
 }
 
 function showIntroGuide(type) {
@@ -86,26 +85,40 @@ function showIntroGuide(type) {
     let guide = "";
     let icon = "🎮";
     
+    // Clear any previous intro animations
+    const existingGhosts = elements.intro.querySelectorAll('.intro-ghost');
+    existingGhosts.forEach(g => g.remove());
+
     switch(type) {
         case 'key':
             icon = "🔑";
-            guide = "움직이는 바늘이 초록색 영역에 왔을 때<br>화면을 터치하세요! (3번 성공)";
+            guide = "<b>[ 황금 열쇠 미션 ]</b><br><br>바늘이 초록색 칸에 왔을 때<br>화면을 터치하세요! (3번 성공)";
             break;
         case 'bag':
             icon = "🎒";
-            guide = "가방을 좌우로 움직여 떨어지는 도구를<br>10개 잡으세요! 💣폭탄은 피하세요.";
+            guide = "<b>[ 탐험가 가방 미션 ]</b><br><br>가방을 좌우로 움직여 떨어지는 도구를<br>10개 잡으세요! 💣폭탄은 피하세요.";
             break;
         case 'map':
             icon = "🗺️";
-            guide = "지도의 조각들이 반짝이는 순서를<br>잘 기억했다가 그대로 따라 누르세요!";
+            guide = "<b>[ 보물 지도 미션 ]</b><br><br>지도의 조각들이 반짝이는 순서를<br>잘 기억했다가 그대로 따라 누르세요!<br>(단계별로 개수가 늘어납니다)";
             break;
         case 'lantern':
             icon = "🔦";
-            guide = "손전등을 움직여 숨어있는 유령을 찾아<br>빛의 중심에 1초간 고정시키세요!";
+            guide = "<b>[ 탐험 랜턴 미션 ]</b><br><br>손전등을 움직여 숨어있는 유령을 찾아<br>빛의 중심에 1초간 고정시키세요!";
+            // 🌟 인트로 배경 유령 연출
+            for(let i=0; i<5; i++) {
+                const g = document.createElement('div');
+                g.className = 'intro-ghost';
+                g.textContent = '👻';
+                g.style.left = Math.random() * 80 + 10 + '%';
+                g.style.top = Math.random() * 60 + 20 + '%';
+                g.style.animationDelay = (Math.random() * 2) + 's';
+                elements.intro.appendChild(g);
+            }
             break;
         case 'gem':
             icon = "💎";
-            guide = "1단계: 바위를 연타해 부수세요!<br>2단계: 스마트폰을 흔들어 먼지를 터세요!";
+            guide = "<b>[ 보물 원석 미션 ]</b><br><br>1단계: 바위를 연타해 부수세요!<br>2단계: 스마트폰을 흔들어 먼지를 터세요!";
             break;
     }
     
@@ -114,8 +127,18 @@ function showIntroGuide(type) {
 }
 
 function startMiniGameLogic() {
-    elements.intro.style.display = 'none';
-    haptic('click');
+    // 🌟 인트로 유령 제거 연출
+    const introGhosts = elements.intro.querySelectorAll('.intro-ghost');
+    introGhosts.forEach(g => {
+        g.style.transition = '0.5s';
+        g.style.transform = 'scale(0) rotate(360deg)';
+        g.style.opacity = '0';
+    });
+
+    setTimeout(() => {
+        elements.intro.style.display = 'none';
+        haptic('click');
+...
 
     const onWin = () => finishMiniGame('✨ 성공!', '#4ade80', true);
     const onLose = () => finishMiniGame('💦 실패', '#ef4444', false);
@@ -140,13 +163,13 @@ function resetGameUI() {
     clearTimeout(mgTimeout); 
     cancelAnimationFrame(mgAnimFrame);
     
-    // Clear game-specific elements (excluding result overlay)
+    // Clear game-specific elements (excluding result overlay and intro)
     Array.from(elements.container.children).forEach(child => { 
-        if(child.id !== 'mg-result') child.remove(); 
+        if(child.id !== 'mg-result' && child.id !== 'mg-intro') child.remove(); 
     });
     
     elements.resultOverlay.style.display = 'none';
-    if (elements.intro) elements.intro.style.display = 'none';
+    elements.intro.style.display = 'none';
     elements.container.classList.remove('mg-shake'); 
     elements.container.classList.remove('flash-success');
     elements.container.style.pointerEvents = 'auto';
@@ -160,7 +183,8 @@ function closeMiniGame() {
     resetGameUI(); 
     window.ondevicemotion = null;
     elements.modal.classList.remove('active');
-    // Global flag from app logic
+    
+    // Release processing lock in index.html
     if (typeof isProcessing !== 'undefined') isProcessing = false;
 }
 
@@ -189,21 +213,29 @@ function finishMiniGame(msg, color, isWin) {
     }
 }
 
-// ── 1. 타이밍 락픽 (Golden Key) ──
+// ── 1. 황금 열쇠 미션 (Golden Key) ──
 function playLockpick(win, lose) {
-    elements.title.textContent = "타이밍 락픽"; 
-    if (elements.desc) elements.desc.textContent = "초록색 안전 영역에서 탭하세요! (3번)";
+    elements.title.textContent = "황금 열쇠 미션"; 
+    if (elements.desc) elements.desc.textContent = "바늘이 초록색 칸에 왔을 때 탭!";
     elements.container.innerHTML += `<div style="position:absolute; bottom:50px; width:100%;"><div class="lock-bar"><div id="lp-safe" class="lock-safe"></div><div id="lp-needle" class="lock-needle"></div></div></div>`;
     updateLives(); 
     let successCount = 0; 
     elements.score.textContent = `성공: 0/3`;
+
+    // 바늘 속도 조절을 위한 함수
+    const setSpeed = (s) => {
+        const needle = document.getElementById('lp-needle');
+        if (needle) needle.style.animationDuration = s + 's';
+    };
 
     elements.container.onmousedown = elements.container.ontouchstart = (e) => {
         e.preventDefault();
         const needle = document.getElementById('lp-needle').getBoundingClientRect();
         const safe = document.getElementById('lp-safe').getBoundingClientRect();
         
-        if (needle.left + needle.width/2 >= safe.left && needle.left + needle.width/2 <= safe.right) {
+        // 중앙 지점 체크
+        const needleMid = needle.left + needle.width / 2;
+        if (needleMid >= safe.left && needleMid <= safe.right) {
             successCount++; 
             elements.score.textContent = `성공: ${successCount}/3`;
             createParticles(getEventPos(e, elements.container).x, getEventPos(e, elements.container).y, 5, '✨');
@@ -212,27 +244,31 @@ function playLockpick(win, lose) {
             elements.container.classList.add('flash-success');
             setTimeout(() => elements.container.classList.remove('flash-success'), 400);
 
-            if (successCount >= 3) win();
-            else {
+            if (successCount >= 3) {
+                win();
+            } else {
+                // 다음 단계: 안전 영역 랜덤 배치 및 속도 증가
                 const safeEl = document.getElementById('lp-safe');
-                safeEl.style.width = (20 - successCount*4) + '%';
+                safeEl.style.width = (20 - successCount * 3) + '%';
                 safeEl.style.left = Math.random() * 60 + 10 + '%';
-                document.getElementById('lp-needle').style.animationDuration = (1.2 - successCount*0.25) + 's';
+                setSpeed(1.2 - successCount * 0.25);
             }
-        } else { takeDamage(lose); }
+        } else { 
+            takeDamage(lose); 
+        }
     };
 }
 
 // ── 2. 탐험 도구 캐치 (Explorer Bag) ──
 function playCatch(win, lose) {
     elements.title.textContent = "탐험 도구 캐치"; 
-    if (elements.desc) elements.desc.textContent = "초록색 도구를 10개 담으세요! 💣피하기";
-    elements.container.innerHTML += `<div id="c-player" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:45px; z-index:10;">🎒</div>`;
+    if (elements.desc) elements.desc.textContent = "도구를 10개 담으세요! 💣피하기";
+    elements.container.innerHTML += `<div id="c-player" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:45px; z-index:10; transition: left 0.1s ease-out;">🎒</div>`;
     updateLives(); 
     let score = 0; 
     let items = []; 
     const player = document.getElementById('c-player');
-    const toolEmojis = ['🧭', '🗺️', '💧', '🔦']; 
+    const toolEmojis = ['🧭', '🗺️', '💧', '🔦', '🍞']; 
     elements.score.textContent = `캐치: 0/10`;
 
     const moveHandler = (e) => {
@@ -245,40 +281,48 @@ function playCatch(win, lose) {
 
     let speed = 3.5;
     mgInterval = setInterval(() => {
-        if (Math.random() < 0.12) {
+        // 아이템 생성
+        if (Math.random() < 0.15) {
             let el = document.createElement('div');
-            const isBomb = Math.random() > 0.75;
+            const isBomb = Math.random() > 0.8;
             el.textContent = isBomb ? '💣' : toolEmojis[Math.floor(Math.random() * toolEmojis.length)];
             el.dataset.type = isBomb ? 'bomb' : 'tool';
             el.className = isBomb ? 'item-bad' : 'item-good';
-            el.style.cssText += `position:absolute; top:-40px; left:${Math.random()*80 + 10}%; font-size:24px; z-index:5;`;
+            el.style.cssText += `position:absolute; top:-40px; left:${Math.random()*85 + 5}%; font-size:28px; z-index:5;`;
             elements.container.appendChild(el); 
             items.push({el: el, y: -40});
         }
         
+        // 아이템 이동 및 충돌 체크
         items.forEach((obj, i) => {
             obj.y += speed; 
             obj.el.style.top = obj.y + 'px';
             const pRect = player.getBoundingClientRect(); 
             const eRect = obj.el.getBoundingClientRect();
             
-            if (eRect.bottom > pRect.top+10 && eRect.left < pRect.right-10 && eRect.right > pRect.left+10) {
+            // 충돌 판정
+            if (eRect.bottom > pRect.top + 15 && eRect.top < pRect.bottom && eRect.left < pRect.right - 10 && eRect.right > pRect.left + 10) {
                 const hitX = obj.el.offsetLeft + 15; 
                 const hitY = obj.el.offsetTop + 15;
+                
                 if (obj.el.dataset.type === 'bomb') {
+                    // 폭탄 히트: 진동 및 흔들림 연출
                     createParticles(hitX, hitY, 15, ['💥','🔥']); 
+                    elements.container.classList.add('mg-shake');
+                    setTimeout(() => elements.container.classList.remove('mg-shake'), 500);
+                    navigator.vibrate?.([100, 50, 100]); // 강한 진동
                     takeDamage(lose);
                 } else {
                     score++; 
                     elements.score.textContent = `캐치: ${score}/10`;
                     createParticles(hitX, hitY, 3, '✨'); 
-                    speed += 0.1; 
+                    speed += 0.08; 
                     haptic('click');
                 }
                 obj.el.remove(); 
                 items.splice(i, 1);
                 if (score >= 10 && lives > 0) win();
-            } else if (obj.y > 300) { 
+            } else if (obj.y > elements.container.offsetHeight) { 
                 obj.el.remove(); 
                 items.splice(i, 1); 
             }
@@ -289,7 +333,7 @@ function playCatch(win, lose) {
 // ── 3. 기억의 지도 (Treasure Map) ──
 function playSimon(win, lose) {
     elements.title.textContent = "기억의 지도"; 
-    if (elements.desc) elements.desc.textContent = "반짝이는 조각 순서를 기억하세요! (4회)";
+    if (elements.desc) elements.desc.textContent = "반짝이는 순서를 기억하세요! (4회)";
     let html = '<div class="simon-grid" id="s-grid">';
     for(let i=0; i<9; i++) html += `<div class="simon-btn" data-id="${i}"></div>`;
     elements.container.innerHTML += html + '</div><div id="s-msg" class="simon-turn-msg"></div>';
@@ -304,9 +348,10 @@ function playSimon(win, lose) {
     const showSequence = () => {
         playerStep = 0; 
         let step = 0; 
+        // 🌟 터치 완전 차단 (보여주는 동안)
         elements.container.style.pointerEvents = 'none';
         grid.style.filter = 'brightness(0.5)';
-        turnMsg.textContent = "👀 외우세요!";
+        turnMsg.textContent = "👀 순서를 외우세요!";
         turnMsg.style.opacity = '1';
 
         mgInterval = setInterval(() => {
@@ -318,18 +363,23 @@ function playSimon(win, lose) {
                 haptic('click');
             } else {
                 clearInterval(mgInterval); 
+                // 🌟 터치 허용 (사용자 턴)
                 elements.container.style.pointerEvents = 'auto';
                 grid.style.filter = 'brightness(1)';
-                turnMsg.textContent = "👇 따라하세요!";
+                turnMsg.textContent = "👇 따라 누르세요!";
                 turnMsg.style.opacity = '1';
                 setTimeout(() => turnMsg.style.opacity = '0', 800);
             }
-        }, 600);
+        }, 700);
     };
 
     const nextRound = () => {
-        sequence.push(Math.floor(Math.random() * 9));
-        elements.score.textContent = `조각: ${sequence.length}/4`;
+        const round = sequence.length + 1;
+        sequence = []; // 🌟 이전 라운드 시퀀스 초기화 (완전 랜덤)
+        for(let i=0; i<round; i++) {
+            sequence.push(Math.floor(Math.random() * 9));
+        }
+        elements.score.textContent = `단계: ${round}/4`;
         showSequence();
     };
 
@@ -340,21 +390,24 @@ function playSimon(win, lose) {
             btn.classList.add('active');
             createParticles(getEventPos(e, elements.container).x, getEventPos(e, elements.container).y, 2, '✨');
             haptic('click');
-            setTimeout(() => btn.classList.remove('active'), 200);
+            setTimeout(() => btn.classList.remove('active'), 250);
             
             if (id === sequence[playerStep]) {
                 playerStep++;
                 if (playerStep === sequence.length) {
-                    if (sequence.length === 4) setTimeout(win, 500);
-                    else {
+                    if (sequence.length === 4) {
+                        // 최종 성공 시 터치 차단
+                        elements.container.style.pointerEvents = 'none';
+                        setTimeout(win, 600);
+                    } else {
                         elements.container.classList.add('flash-success');
-                        setTimeout(() => elements.container.classList.remove('flash-success'), 500);
+                        setTimeout(() => elements.container.classList.remove('flash-success'), 400);
                         setTimeout(nextRound, 800);
                     }
                 }
             } else {
                 takeDamage(lose);
-                if(lives > 0) setTimeout(showSequence, 800);
+                if(lives > 0) setTimeout(showSequence, 1000);
             }
         };
     });
@@ -364,24 +417,24 @@ function playSimon(win, lose) {
 // ── 4. 어둠 속 추적 (Explorer Lantern) ──
 function playSpotlight(win, lose) {
     elements.title.textContent = "어둠 속 추적"; 
-    if (elements.desc) elements.desc.textContent = "손전등 중심에 유령을 1초간 맞추세요!";
+    if (elements.desc) elements.desc.textContent = "중심에 유령을 1초간 맞추세요!";
     elements.container.innerHTML += `<div class="track-gauge-bg"><div id="sl-gauge" class="track-gauge-fill"></div></div>
                                     <div id="sl-bg" style="width:100%; height:100%; background: #000;"></div>
-                                    <div id="sl-target" style="position:absolute; font-size:35px; opacity:0; z-index:103;">👻</div>`;
+                                    <div id="sl-target" style="position:absolute; font-size:38px; opacity:0; z-index:103; filter: drop-shadow(0 0 10px rgba(255,255,255,0.4));">👻</div>`;
     const bg = document.getElementById('sl-bg'); 
     const target = document.getElementById('sl-target'); 
     const gaugeFill = document.getElementById('sl-gauge');
     
     let stage = 1; 
     elements.score.textContent = `단계: 1/3`;
-    let ghost = { x: 50, y: 50, vx: 1.0, vy: 1.0 }; 
-    let light = { x: -100, y: -100 }; 
+    let ghost = { x: 50, y: 50, vx: 1.2, vy: 1.2 }; 
+    let light = { x: -150, y: -150 }; 
     let trackTime = 0; 
 
     const moveLight = (e) => {
         e.preventDefault(); 
         light = getEventPos(e, elements.container);
-        bg.style.background = `radial-gradient(circle at ${light.x}px ${light.y}px, transparent 0px, transparent 35px, rgba(0,0,0,0.6) 50px, rgba(0,0,0,0.85) 100px, #000 120px, #000 100%)`;
+        bg.style.background = `radial-gradient(circle at ${light.x}px ${light.y}px, transparent 0px, transparent 35px, rgba(0,0,0,0.6) 55px, rgba(0,0,0,0.9) 110px, #000 130px)`;
     };
     elements.container.addEventListener('mousemove', moveLight); 
     elements.container.addEventListener('touchmove', moveLight, {passive:false});
@@ -390,24 +443,31 @@ function playSpotlight(win, lose) {
     const loop = (now) => {
         const dt = now - lastTime; 
         lastTime = now;
+        
         ghost.x += ghost.vx; 
         ghost.y += ghost.vy;
         
-        if(ghost.x <= 20 || ghost.x >= elements.container.offsetWidth - 40) ghost.vx *= -1;
-        if(ghost.y <= 20 || ghost.y >= elements.container.offsetHeight - 40) ghost.vy *= -1;
+        // 벽 반사
+        if(ghost.x <= 10 || ghost.x >= elements.container.offsetWidth - 45) { ghost.vx *= -1; ghost.x = Math.max(11, Math.min(elements.container.offsetWidth - 46, ghost.x)); }
+        if(ghost.y <= 10 || ghost.y >= elements.container.offsetHeight - 45) { ghost.vy *= -1; ghost.y = Math.max(11, Math.min(elements.container.offsetHeight - 46, ghost.y)); }
         
         target.style.left = ghost.x + 'px'; 
         target.style.top = ghost.y + 'px';
-        const dist = Math.hypot(light.x - (ghost.x+17), light.y - (ghost.y+17));
+        
+        const dist = Math.hypot(light.x - (ghost.x + 19), light.y - (ghost.y + 19));
         
         if(dist < 100) { 
-            target.style.opacity = dist < 45 ? '1' : '0.4';
+            target.style.opacity = dist < 45 ? '1' : '0.3';
             if(dist < 45) { 
+                // 유령 추적 중: 진동 추가
                 trackTime += dt;
-                if(Math.random() < 0.1) createParticles(ghost.x+17, ghost.y+17, 1, '✨');
-                if(trackTime % 200 < 20) haptic('click');
-            } else { trackTime = Math.max(0, trackTime - dt * 2); }
-        } else { target.style.opacity = '0'; trackTime = Math.max(0, trackTime - dt * 2); }
+                if(Math.random() < 0.15) createParticles(ghost.x + 19, ghost.y + 19, 1, '✨');
+                if(trackTime % 150 < 30) navigator.vibrate?.(20); // 짧은 진동
+            } else { trackTime = Math.max(0, trackTime - dt * 1.5); }
+        } else { 
+            target.style.opacity = '0'; 
+            trackTime = Math.max(0, trackTime - dt * 2.5); 
+        }
 
         const percent = Math.min(100, (trackTime / 1000) * 100);
         gaugeFill.style.width = percent + '%';
@@ -415,15 +475,16 @@ function playSpotlight(win, lose) {
         if(percent >= 100) {
             elements.container.classList.add('flash-success');
             setTimeout(() => elements.container.classList.remove('flash-success'), 500);
+            haptic('item');
 
             if(stage >= 3) { win(); return; } 
             else {
                 stage++; 
                 elements.score.textContent = `단계: ${stage}/3`; 
                 trackTime = 0;
-                ghost.vx = (Math.random() > 0.5 ? 1 : -1) * (1.0 + stage * 0.5);
-                ghost.vy = (Math.random() > 0.5 ? 1 : -1) * (1.0 + stage * 0.5);
-                createParticles(ghost.x+17, ghost.y+17, 10, '🌟');
+                ghost.vx = (Math.random() > 0.5 ? 1 : -1) * (1.2 + stage * 0.6);
+                ghost.vy = (Math.random() > 0.5 ? 1 : -1) * (1.2 + stage * 0.6);
+                createParticles(ghost.x + 19, ghost.y + 19, 10, '🌟');
             }
         }
         mgAnimFrame = requestAnimationFrame(loop);
@@ -438,10 +499,10 @@ function playSpotlight(win, lose) {
     }, 100);
 }
 
-// ── 5. 바위 깎고 털기 (Treasure Gem) ──
+// ── 5. 보물 원석 미션 (Treasure Gem) ──
 function playMash(win, lose) {
-    elements.title.textContent = "바위 깎고 털기!"; 
-    if (elements.desc) elements.desc.textContent = "1단계: 바위를 연타해 부수세요!";
+    elements.title.textContent = "보물 원석 미션"; 
+    if (elements.desc) elements.desc.textContent = "바위를 연타해 부수세요!";
     elements.container.innerHTML += `<div class="track-gauge-bg"><div id="m-hp" class="track-gauge-fill" style="background: linear-gradient(90deg, #ef4444, #f4a940); width:100%;"></div></div>
                                     <div class="dust-layer" id="m-dust"></div>
                                     <div class="shake-msg" id="m-msg">📱 스마트폰을 마구 흔들어<br>먼지를 터세요!</div>
@@ -469,21 +530,31 @@ function playMash(win, lose) {
     rockWrap.onmousedown = rockWrap.ontouchstart = (e) => {
         if(phase !== 1) return;
         e.preventDefault(); 
+        
+        const prevHp = hp;
         hp -= 4.0; 
         hpBar.style.width = Math.max(0, hp) + '%';
         createParticles(getEventPos(e, elements.container).x, getEventPos(e, elements.container).y, 3, ['🪨', '▫️']);
         haptic('click');
         
+        // 바위 크기 및 각도 변화
         rock.style.transform = `translate(-50%, -50%) rotate(${Math.random()*15 - 7.5}deg) scale(${0.8 + (hp/100)*0.2})`;
         
-        if (hp <= 70 && rockStage === 1) {
+        // 🌟 70%, 30% 마일스톤: 강한 진동 및 시각 효과
+        if (prevHp > 70 && hp <= 70 && rockStage === 1) {
             rockStage = 2;
             rock.style.clipPath = 'polygon(15% 5%, 100% 10%, 85% 90%, 5% 100%)';
-            createParticles(elements.container.offsetWidth/2, elements.container.offsetHeight/2, 10, '🪨');
-        } else if (hp <= 35 && rockStage === 2) {
+            createParticles(elements.container.offsetWidth/2, elements.container.offsetHeight/2, 15, '🪨');
+            navigator.vibrate?.([100, 50, 100]); // 강한 진동
+            elements.container.classList.add('mg-shake');
+            setTimeout(() => elements.container.classList.remove('mg-shake'), 400);
+        } else if (prevHp > 30 && hp <= 30 && rockStage === 2) {
             rockStage = 3;
             rock.style.clipPath = 'polygon(25% 25%, 75% 20%, 80% 80%, 20% 75%)';
-            createParticles(elements.container.offsetWidth/2, elements.container.offsetHeight/2, 15, '🪨');
+            createParticles(elements.container.offsetWidth/2, elements.container.offsetHeight/2, 20, '🪨');
+            navigator.vibrate?.([150, 60, 150]); // 더 강한 진동
+            elements.container.classList.add('mg-shake');
+            setTimeout(() => elements.container.classList.remove('mg-shake'), 500);
         }
 
         if (hp <= 0) {
@@ -491,22 +562,30 @@ function playMash(win, lose) {
             rock.style.display = 'none';
             dustLayer.style.opacity = '1'; 
             msg.style.display = 'block';
-            if (elements.desc) elements.desc.textContent = "2단계: 흔들거나 화면을 문지르세요!";
+            if (elements.desc) elements.desc.textContent = "먼지를 마구 흔들어 터세요!";
             hpBar.style.width = '100%'; 
             hpBar.style.background = '#a9a9a9';
             
             elements.container.classList.add('flash-success');
             setTimeout(() => elements.container.classList.remove('flash-success'), 500);
+            haptic('item');
         }
     };
 
     let lastX = 0, lastY = 0;
     const handleShake = () => {
         if(phase !== 2) return;
+        
+        const prevShakeHp = shakeHp;
         shakeHp -= 2.5; 
         hpBar.style.width = Math.max(0, shakeHp) + '%';
         dustLayer.style.opacity = shakeHp / 100;
         
+        // 🌟 흔들기 70%, 30% 마일스톤 진동
+        if ((prevShakeHp > 70 && shakeHp <= 70) || (prevShakeHp > 30 && shakeHp <= 30)) {
+            navigator.vibrate?.(80);
+        }
+
         const gray = shakeHp; 
         const bright = 0.3 + ((100 - shakeHp) / 100) * 1.2; 
         const blur = (shakeHp / 100) * 3; 
@@ -524,7 +603,7 @@ function playMash(win, lose) {
             dustLayer.style.display = 'none'; 
             msg.style.display = 'none';
             gem.style.filter = 'drop-shadow(0 0 30px #7ec8e3) brightness(1.5)';
-            createParticles(elements.container.offsetWidth/2, elements.container.offsetHeight/2, 20, ['💎', '✨', '🌟']);
+            createParticles(elements.container.offsetWidth/2, elements.container.offsetHeight/2, 25, ['💎', '✨', '🌟']);
             win();
         }
     };

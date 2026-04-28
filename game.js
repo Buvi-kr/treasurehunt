@@ -114,7 +114,7 @@ function showIntroGuide(type) {
             break;
         case 'map':
             icon = "🗺️";
-            guide = "<b>[ 보물 지도 미션 ]</b><br><br>지도의 조각들이 반짝이는 순서를<br>잘 기억했다가 그대로 따라 누르세요!<br>(단계별로 개수가 늘어납니다)";
+            guide = "<b>[ 보물 지도 미션 ]</b><br><br>반짝이는 순서를 기억하고<br>그대로 따라 누르세요!";
             break;
         case 'lantern':
             icon = "🔦";

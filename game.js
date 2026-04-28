@@ -277,6 +277,11 @@ function playLockpick(win, lose, myId) {
 
     elements.container.onmousedown = elements.container.ontouchstart = (e) => {
         if (!isAlive()) return;
+        
+        // 중복 클릭 방지 (Ghost Click 차단)
+        if (elements.container.dataset.lastPress && Date.now() - parseInt(elements.container.dataset.lastPress) < 300) return;
+        elements.container.dataset.lastPress = Date.now();
+
         e.preventDefault();
         const needle = document.getElementById('lp-needle').getBoundingClientRect();
         const safe = document.getElementById('lp-safe').getBoundingClientRect();
@@ -476,8 +481,13 @@ function playSimon(win, lose, myId) {
     };
 
     btns.forEach(btn => {
-        btn.onmousedown = btn.ontouchstart = (e) => {
+        const handlePress = (e) => {
             if (!isAlive() || elements.container.style.pointerEvents === 'none') return;
+            
+            // 중복 클릭 방지 (Mobile에서 touch와 mouse가 둘 다 터지는 현상 차단)
+            if (btn.dataset.lastPress && Date.now() - parseInt(btn.dataset.lastPress) < 300) return;
+            btn.dataset.lastPress = Date.now();
+
             e.preventDefault();
             
             const id = parseInt(btn.dataset.id);
@@ -512,6 +522,9 @@ function playSimon(win, lose, myId) {
                 }
             }
         };
+
+        btn.onmousedown = handlePress;
+        btn.ontouchstart = handlePress;
     });
 
     mgTimeout = setTimeout(generateSequence, 500);

@@ -6,6 +6,7 @@ let mgInterval, mgTimeout, mgAnimFrame;
 let currentGameType = '';
 let currentItemCode = '';
 let lives = 3;
+let isEnding = false; // 전역 상태로 게임 종료 중인지 체크
 
 // UI Elements (Cached after first open)
 let elements = {};
@@ -174,23 +175,42 @@ function resetGameUI() {
     clearTimeout(mgTimeout); 
     cancelAnimationFrame(mgAnimFrame);
     
-    // Clear game-specific elements (excluding result overlay and intro)
-    if (elements.container) {
-        Array.from(elements.container.children).forEach(child => { 
-            if(child.id !== 'mg-result' && child.id !== 'mg-intro') child.remove(); 
-        });
-        elements.container.classList.remove('mg-shake'); 
-        elements.container.classList.remove('flash-success');
-        elements.container.style.pointerEvents = 'auto';
+    // [핵심 수정] 컨테이너 전체를 복제하여 이전 게임의 모든 이벤트 리스너(터치, 드래그 등)를 완전히 소멸시킴
+    const oldContainer = elements.container;
+    if (oldContainer) {
+        const newContainer = oldContainer.cloneNode(true);
+        oldContainer.parentNode.replaceChild(newContainer, oldContainer);
+        elements.container = newContainer;
+
+        // DOM이 새로 생성되었으므로 내부 UI 요소 참조를 다시 연결 (검은 화면 방지)
+        elements.resultOverlay = newContainer.querySelector('#mg-result');
+        elements.resultText = newContainer.querySelector('#result-text');
+        elements.retryBtn = newContainer.querySelector('#retry-btn');
+        elements.intro = newContainer.querySelector('#mg-intro');
+        elements.introGuide = newContainer.querySelector('#mg-intro-guide');
+        elements.introIcon = newContainer.querySelector('#mg-intro-icon');
     }
+
+    // 새 게임을 위해 이전 게임 요소들 삭제 (intro, result는 유지)
+    Array.from(elements.container.children).forEach(child => { 
+        if(child.id !== 'mg-result' && child.id !== 'mg-intro') child.remove(); 
+    });
     
     if (elements.resultOverlay) elements.resultOverlay.style.display = 'none';
     if (elements.intro) elements.intro.style.display = 'none';
+    
+    elements.container.classList.remove('mg-shake'); 
+    elements.container.classList.remove('flash-success');
+    elements.container.style.pointerEvents = 'auto';
     
     elements.score.textContent = ''; 
     elements.timer.textContent = ''; 
     elements.lives.textContent = '';
     lives = 3; 
+    
+    // 자이로센서 초기화
+    window.ondevicemotion = null;
+    isEnding = false; // 종료 플래그 리셋
 }
 
 function closeMiniGame() {
@@ -203,6 +223,9 @@ function closeMiniGame() {
 }
 
 function finishMiniGame(msg, color, isWin) {
+    if (isEnding) return; // 이미 종료 중이면 무시
+    isEnding = true;
+
     if(isWin) {
         elements.container.style.pointerEvents = 'none';
         elements.resultOverlay.style.display = 'flex';
@@ -210,9 +233,12 @@ function finishMiniGame(msg, color, isWin) {
         elements.resultText.style.color = color;
         elements.retryBtn.style.display = 'none';
         
+        sound.playFanfare();
+        haptic('clear');
+        fireConfetti();
         createParticles(elements.container.offsetWidth/2, elements.container.offsetHeight/2, 20, ['✨','🌟','🎉']);
         
-        // Trigger core app logic to save and show success
+        // 1.5초 후 성공 데이터 저장 및 닫기
         setTimeout(() => {
             closeMiniGame();
             if (typeof saveItemAfterMission === 'function') {
@@ -224,6 +250,8 @@ function finishMiniGame(msg, color, isWin) {
         elements.resultText.textContent = msg; 
         elements.resultText.style.color = color;
         elements.retryBtn.style.display = 'block';
+        sound.playError();
+        haptic('error');
     }
 }
 
@@ -231,7 +259,7 @@ function finishMiniGame(msg, color, isWin) {
 function playLockpick(win, lose) {
     elements.title.textContent = "황금 열쇠 미션"; 
     if (elements.desc) elements.desc.textContent = "바늘이 초록색 칸에 왔을 때 탭!";
-    elements.container.innerHTML += `<div style="position:absolute; bottom:50px; width:100%;"><div class="lock-bar"><div id="lp-safe" class="lock-safe"></div><div id="lp-needle" class="lock-needle"></div></div></div>`;
+    elements.container.insertAdjacentHTML('beforeend', `<div style="position:absolute; bottom:50px; width:100%;"><div class="lock-bar"><div id="lp-safe" class="lock-safe"></div><div id="lp-needle" class="lock-needle"></div></div></div>`);
     updateLives(); 
     let successCount = 0; 
     elements.score.textContent = `성공: 0/3`;
@@ -277,7 +305,7 @@ function playLockpick(win, lose) {
 function playCatch(win, lose) {
     elements.title.textContent = "탐험 도구 캐치"; 
     if (elements.desc) elements.desc.textContent = "도구를 10개 담으세요! 💣피하기";
-    elements.container.innerHTML += `<div id="c-player" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:45px; z-index:10; transition: left 0.1s ease-out;">🎒</div>`;
+    elements.container.insertAdjacentHTML('beforeend', `<div id="c-player" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:45px; z-index:10; transition: left 0.1s ease-out;">🎒</div>`);
     updateLives(); 
     let score = 0; 
     let items = []; 
@@ -350,7 +378,7 @@ function playSimon(win, lose) {
     if (elements.desc) elements.desc.textContent = "반짝이는 순서를 기억하세요! (4회)";
     let html = '<div class="simon-grid" id="s-grid">';
     for(let i=0; i<9; i++) html += `<div class="simon-btn" data-id="${i}"></div>`;
-    elements.container.innerHTML += html + '</div><div id="s-msg" class="simon-turn-msg"></div>';
+    elements.container.insertAdjacentHTML('beforeend', html + '</div><div id="s-msg" class="simon-turn-msg"></div>');
     updateLives();
     
     let sequence = []; 
@@ -432,9 +460,9 @@ function playSimon(win, lose) {
 function playSpotlight(win, lose) {
     elements.title.textContent = "어둠 속 추적"; 
     if (elements.desc) elements.desc.textContent = "중심에 유령을 1초간 맞추세요!";
-    elements.container.innerHTML += `<div class="track-gauge-bg"><div id="sl-gauge" class="track-gauge-fill"></div></div>
+    elements.container.insertAdjacentHTML('beforeend', `<div class="track-gauge-bg"><div id="sl-gauge" class="track-gauge-fill"></div></div>
                                     <div id="sl-bg" style="width:100%; height:100%; background: #000;"></div>
-                                    <div id="sl-target" style="position:absolute; font-size:38px; opacity:0; z-index:103; filter: drop-shadow(0 0 10px rgba(255,255,255,0.4));">👻</div>`;
+                                    <div id="sl-target" style="position:absolute; font-size:38px; opacity:0; z-index:103; filter: drop-shadow(0 0 10px rgba(255,255,255,0.4));">👻</div>`);
     const bg = document.getElementById('sl-bg'); 
     const target = document.getElementById('sl-target'); 
     const gaugeFill = document.getElementById('sl-gauge');
@@ -517,13 +545,13 @@ function playSpotlight(win, lose) {
 function playMash(win, lose) {
     elements.title.textContent = "보물 원석 미션"; 
     if (elements.desc) elements.desc.textContent = "바위를 연타해 부수세요!";
-    elements.container.innerHTML += `<div class="track-gauge-bg"><div id="m-hp" class="track-gauge-fill" style="background: linear-gradient(90deg, #ef4444, #f4a940); width:100%;"></div></div>
+    elements.container.insertAdjacentHTML('beforeend', `<div class="track-gauge-bg"><div id="m-hp" class="track-gauge-fill" style="background: linear-gradient(90deg, #ef4444, #f4a940); width:100%;"></div></div>
                                     <div class="dust-layer" id="m-dust"></div>
                                     <div class="shake-msg" id="m-msg">📱 스마트폰을 마구 흔들어<br>먼지를 터세요!</div>
                                     <div class="rock-wrap" id="m-wrap">
                                         <div id="m-gem" class="mash-gem">💎</div>
                                         <div id="m-rock" class="mash-rock">🪨</div>
-                                    </div>`;
+                                    </div>`);
     
     let hp = 100; 
     let shakeHp = 100; 

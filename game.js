@@ -152,7 +152,7 @@ function startMiniGameLogic() {
         haptic('click');
 
         const onWin = () => finishMiniGame('✨ 성공!', '#4ade80', true);
-        const onLose = () => finishMiniGame('💦 실패', '#ef4444', false);
+        const onLose = () => finishMiniGame('💦 실패! 다시 스캔해주세요', '#ef4444', false);
 
         // Map item IDs to game types
         switch(currentGameType) {
@@ -249,7 +249,7 @@ function finishMiniGame(msg, color, isWin) {
         elements.resultOverlay.style.display = 'flex';
         elements.resultText.textContent = msg; 
         elements.resultText.style.color = color;
-        elements.retryBtn.style.display = 'block';
+        elements.retryBtn.style.display = 'none'; // [수정] 다시하기 버튼 제거
         sound.playError();
         haptic('error');
     }
@@ -383,27 +383,37 @@ function playSimon(win, lose) {
     
     let sequence = []; 
     let playerStep = 0;
-    const btns = elements.container.querySelectorAll('.simon-btn');
-    const grid = document.getElementById('s-grid');
-    const turnMsg = document.getElementById('s-msg');
     
+    // 요소를 동적으로 다시 가져옵니다.
+    const btns = elements.container.querySelectorAll('.simon-btn');
+    let turnMsg = document.getElementById('s-msg');
+    
+    // [핵심 1] 좀비 타이머 방지: 이 게임판(s-grid)이 DOM에 여전히 붙어있는지 확인
+    const isAlive = () => document.getElementById('s-grid') !== null;
+
     const showSequence = () => {
-        if (!grid || !turnMsg) return;
+        if (!isAlive()) return; // 창을 닫았거나 재도전했다면 즉시 실행 중단
+        
         playerStep = 0; 
         let step = 0; 
         
-        // Reset state
         btns.forEach(b => b.classList.remove('active'));
-        elements.container.style.pointerEvents = 'none';
-        grid.style.filter = 'brightness(0.5)';
-        turnMsg.textContent = "👀 순서를 외우세요!";
-        turnMsg.style.opacity = '1';
+        elements.container.style.pointerEvents = 'none'; // 시퀀스 재생 중 터치 완벽 차단
+        
+        const grid = document.getElementById('s-grid');
+        if(grid) grid.style.filter = 'brightness(0.5)';
+        
+        if(turnMsg) {
+            turnMsg.textContent = "👀 순서를 외우세요!";
+            turnMsg.style.opacity = '1';
+        }
 
         const nextStep = () => {
+            if (!isAlive()) return;
             btns.forEach(b => b.classList.remove('active'));
 
             if (step < sequence.length) {
-                if (step === 0) turnMsg.style.opacity = '0';
+                if (step === 0 && turnMsg) turnMsg.style.opacity = '0';
                 const currentBtn = btns[sequence[step]];
                 if (currentBtn) {
                     currentBtn.classList.add('active');
@@ -412,12 +422,14 @@ function playSimon(win, lose) {
                 step++;
                 mgTimeout = setTimeout(nextStep, 800);
             } else {
-                elements.container.style.pointerEvents = 'auto';
-                grid.style.filter = 'brightness(1)';
-                turnMsg.textContent = "👇 따라 누르세요!";
-                turnMsg.style.opacity = '1';
+                elements.container.style.pointerEvents = 'auto'; // 터치 허용
+                if(grid) grid.style.filter = 'brightness(1)';
+                if(turnMsg) {
+                    turnMsg.textContent = "👇 따라 누르세요!";
+                    turnMsg.style.opacity = '1';
+                }
                 mgTimeout = setTimeout(() => { 
-                    if(turnMsg) turnMsg.style.opacity = '0'; 
+                    if(isAlive() && turnMsg) turnMsg.style.opacity = '0'; 
                 }, 1000);
             }
         };
@@ -425,15 +437,13 @@ function playSimon(win, lose) {
     };
 
     const generateSequence = () => {
-        if (!turnMsg) return;
+        if (!isAlive()) return;
         const round = sequence.length + 1;
         sequence = [];
         let last = -1;
         for(let i=0; i<round; i++) {
             let next;
-            do {
-                next = Math.floor(Math.random() * 9);
-            } while (next === last);
+            do { next = Math.floor(Math.random() * 9); } while (next === last);
             sequence.push(next);
             last = next;
         }
@@ -443,32 +453,41 @@ function playSimon(win, lose) {
 
     btns.forEach(btn => {
         btn.onmousedown = btn.ontouchstart = (e) => {
+            // 터치 차단 상태면 무시
             if (elements.container.style.pointerEvents === 'none') return;
             e.preventDefault();
+            
             const id = parseInt(btn.dataset.id);
             btn.classList.add('active');
             createParticles(getEventPos(e, elements.container).x, getEventPos(e, elements.container).y, 2, '✨');
             haptic('click');
-            setTimeout(() => btn.classList.remove('active'), 250);
+            
+            setTimeout(() => { if(isAlive()) btn.classList.remove('active'); }, 250);
             
             if (id === sequence[playerStep]) {
                 playerStep++;
                 if (playerStep === sequence.length) {
-                    if(turnMsg) turnMsg.style.opacity = '0'; // Hide msg on success
+                    // [핵심 2] 성공 시 즉각 터치 차단: 마지막 버튼 연타로 인한 꼬임 방지
+                    elements.container.style.pointerEvents = 'none'; 
+                    if(turnMsg) turnMsg.style.opacity = '0'; 
 
                     if (sequence.length === 4) {
-                        elements.container.style.pointerEvents = 'none';
-                        setTimeout(win, 600);
+                        setTimeout(() => { if(isAlive()) win(); }, 600);
                     } else {
                         elements.container.classList.add('flash-success');
-                        setTimeout(() => elements.container.classList.remove('flash-success'), 400);
+                        setTimeout(() => { if(isAlive()) elements.container.classList.remove('flash-success'); }, 400);
                         mgTimeout = setTimeout(generateSequence, 800);
                     }
                 }
             } else {
-                if(turnMsg) turnMsg.style.opacity = '0'; // Hide msg on fail
+                // [핵심 3] 실패 시 즉각 터치 차단: 틀렸을 때 막 누르면 타이머가 중복으로 쌓이는 현상 방지
+                elements.container.style.pointerEvents = 'none'; 
+                if(turnMsg) turnMsg.style.opacity = '0'; 
+                
                 takeDamage(lose);
-                if(lives > 0) mgTimeout = setTimeout(showSequence, 1000);
+                if(lives > 0) {
+                    mgTimeout = setTimeout(showSequence, 1000);
+                }
             }
         };
     });

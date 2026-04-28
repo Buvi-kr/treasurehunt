@@ -823,29 +823,62 @@ async function saveCertificate() {
     const area = document.getElementById('cert-area');
     if (!area) return;
 
-    const name = storageGet('explorer_name', 'Explorer');
+    const name = storageGet('explorer_name', '탐험가');
     const btnSave = document.getElementById('btn-save-image');
     
-    const originalBtnDisplay = btnSave.style.display;
-    btnSave.style.display = 'none'; // Temporarily hide save button
+    const originalText = btnSave.innerText;
+    btnSave.innerText = "⏳ 이미지 굽는 중...";
+    btnSave.disabled = true;
+
+    // 🌟 핵심 1: 투명도 버그 방지를 위해 캡처 직전 애니메이션 및 트랜스폼 강제 해제
+    const originalAnimation = area.style.animation;
+    area.style.animation = 'none';
+    area.style.opacity = '1';
+    area.style.transform = 'none';
+
+    // DOM이 스타일 변경을 반영할 수 있도록 아주 잠시 대기
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     try {
+        // 내부 이미지들이 완전히 로드되었는지 확인
+        const imgs = area.getElementsByTagName('img');
+        await Promise.all(Array.from(imgs).map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(res => { img.onload = res; img.onerror = res; });
+        }));
+
         const canvas = await html2canvas(area, {
-            backgroundColor: '#0a1628',
-            scale: 3, // Higher scale for better quality
-            useCORS: true,
+            scale: 2,           // 고해상도 캡처
+            useCORS: true,      // 외부 이미지 허용
+            backgroundColor: null, // 🌟 핵심 2: 둥근 모서리 바깥쪽을 투명하게 처리
             logging: false
         });
-        
-        const link = document.createElement('a');
-        link.download = `아트밸리_보물찾기_인증서_${name}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+
+        canvas.toBlob((blob) => {
+            if (blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `아트밸리_보물찾기_인증서_${name}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url); // 메모리 누수 방지
+            }
+            restoreBtn();
+        }, 'image/png');
+
     } catch (e) {
-        console.error('Certificate capture failed:', e);
-        alert('이미지 저장 중 오류가 발생했습니다.\n스크린샷으로 저장해주세요!');
-    } finally {
-        btnSave.style.display = originalBtnDisplay;
+        console.error("Capture failed:", e);
+        alert("이미지 저장에 실패했습니다. 다운로드가 안 된다면 화면을 캡처해주세요!");
+        restoreBtn();
+    }
+
+    // 버튼 및 애니메이션 상태 원상 복구 함수
+    function restoreBtn() {
+        btnSave.innerText = originalText;
+        btnSave.disabled = false;
+        area.style.animation = originalAnimation;
     }
 }
 

@@ -388,16 +388,18 @@ function playSimon(win, lose) {
     const turnMsg = document.getElementById('s-msg');
     
     const showSequence = () => {
-        if (!grid) return;
+        if (!grid || !turnMsg) return;
         playerStep = 0; 
         let step = 0; 
+        
+        // Reset state
+        btns.forEach(b => b.classList.remove('active'));
         elements.container.style.pointerEvents = 'none';
         grid.style.filter = 'brightness(0.5)';
         turnMsg.textContent = "👀 순서를 외우세요!";
         turnMsg.style.opacity = '1';
 
         const nextStep = () => {
-            // Clear previous active
             btns.forEach(b => b.classList.remove('active'));
 
             if (step < sequence.length) {
@@ -414,13 +416,16 @@ function playSimon(win, lose) {
                 grid.style.filter = 'brightness(1)';
                 turnMsg.textContent = "👇 따라 누르세요!";
                 turnMsg.style.opacity = '1';
-                mgTimeout = setTimeout(() => { turnMsg.style.opacity = '0'; }, 800);
+                mgTimeout = setTimeout(() => { 
+                    if(turnMsg) turnMsg.style.opacity = '0'; 
+                }, 1000);
             }
         };
         mgTimeout = setTimeout(nextStep, 1000);
     };
 
     const generateSequence = () => {
+        if (!turnMsg) return;
         const round = sequence.length + 1;
         sequence = [];
         let last = -1;
@@ -428,7 +433,7 @@ function playSimon(win, lose) {
             let next;
             do {
                 next = Math.floor(Math.random() * 9);
-            } while (next === last); // 🌟 중복 타일 방지 (연속 방지)
+            } while (next === last);
             sequence.push(next);
             last = next;
         }
@@ -438,6 +443,7 @@ function playSimon(win, lose) {
 
     btns.forEach(btn => {
         btn.onmousedown = btn.ontouchstart = (e) => {
+            if (elements.container.style.pointerEvents === 'none') return;
             e.preventDefault();
             const id = parseInt(btn.dataset.id);
             btn.classList.add('active');
@@ -448,23 +454,26 @@ function playSimon(win, lose) {
             if (id === sequence[playerStep]) {
                 playerStep++;
                 if (playerStep === sequence.length) {
+                    if(turnMsg) turnMsg.style.opacity = '0'; // Hide msg on success
+
                     if (sequence.length === 4) {
-                        // 최종 성공 시 터치 차단
                         elements.container.style.pointerEvents = 'none';
                         setTimeout(win, 600);
                     } else {
                         elements.container.classList.add('flash-success');
                         setTimeout(() => elements.container.classList.remove('flash-success'), 400);
-                        setTimeout(nextRound, 800);
+                        mgTimeout = setTimeout(generateSequence, 800);
                     }
                 }
             } else {
+                if(turnMsg) turnMsg.style.opacity = '0'; // Hide msg on fail
                 takeDamage(lose);
-                if(lives > 0) setTimeout(showSequence, 1000);
+                if(lives > 0) mgTimeout = setTimeout(showSequence, 1000);
             }
         };
     });
-    setTimeout(nextRound, 500);
+
+    mgTimeout = setTimeout(generateSequence, 500);
 }
 
 // ── 4. 어둠 속 추적 (Explorer Lantern) ──

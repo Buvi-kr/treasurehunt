@@ -374,7 +374,7 @@ function playCatch(win, lose) {
 
 // ── 3. 기억의 지도 (Treasure Map) ──
 function playSimon(win, lose) {
-    elements.title.textContent = "기억의 지도"; 
+    elements.title.textContent = "기억의 지도 미션"; 
     if (elements.desc) elements.desc.textContent = "반짝이는 순서를 기억하세요! (4회)";
     let html = '<div class="simon-grid" id="s-grid">';
     for(let i=0; i<9; i++) html += `<div class="simon-btn" data-id="${i}"></div>`;
@@ -388,38 +388,49 @@ function playSimon(win, lose) {
     const turnMsg = document.getElementById('s-msg');
     
     const showSequence = () => {
+        if (!grid) return;
         playerStep = 0; 
         let step = 0; 
-        // 🌟 터치 완전 차단 (보여주는 동안)
         elements.container.style.pointerEvents = 'none';
         grid.style.filter = 'brightness(0.5)';
         turnMsg.textContent = "👀 순서를 외우세요!";
         turnMsg.style.opacity = '1';
 
-        mgInterval = setInterval(() => {
-            if(step > 0) btns[sequence[step-1]].classList.remove('active');
-            if(step < sequence.length) {
-                if(step === 0) turnMsg.style.opacity = '0';
-                btns[sequence[step]].classList.add('active'); 
+        const nextStep = () => {
+            // Clear previous active
+            btns.forEach(b => b.classList.remove('active'));
+
+            if (step < sequence.length) {
+                if (step === 0) turnMsg.style.opacity = '0';
+                const currentBtn = btns[sequence[step]];
+                if (currentBtn) {
+                    currentBtn.classList.add('active');
+                    haptic('click');
+                }
                 step++;
-                haptic('click');
+                mgTimeout = setTimeout(nextStep, 800);
             } else {
-                clearInterval(mgInterval); 
-                // 🌟 터치 허용 (사용자 턴)
                 elements.container.style.pointerEvents = 'auto';
                 grid.style.filter = 'brightness(1)';
                 turnMsg.textContent = "👇 따라 누르세요!";
                 turnMsg.style.opacity = '1';
-                setTimeout(() => turnMsg.style.opacity = '0', 800);
+                mgTimeout = setTimeout(() => { turnMsg.style.opacity = '0'; }, 800);
             }
-        }, 700);
+        };
+        mgTimeout = setTimeout(nextStep, 1000);
     };
 
-    const nextRound = () => {
+    const generateSequence = () => {
         const round = sequence.length + 1;
-        sequence = []; // 🌟 이전 라운드 시퀀스 초기화 (완전 랜덤)
+        sequence = [];
+        let last = -1;
         for(let i=0; i<round; i++) {
-            sequence.push(Math.floor(Math.random() * 9));
+            let next;
+            do {
+                next = Math.floor(Math.random() * 9);
+            } while (next === last); // 🌟 중복 타일 방지 (연속 방지)
+            sequence.push(next);
+            last = next;
         }
         elements.score.textContent = `단계: ${round}/4`;
         showSequence();

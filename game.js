@@ -118,7 +118,7 @@ function showIntroGuide(type) {
             break;
         case 'lantern':
             icon = "🔦";
-            guide = "<b>[ 탐험 랜턴 미션 ]</b><br>손전등을 움직여 숨어있는 유령을 찾아<br>빛의 중심에 1초간 고정시키세요!";
+            guide = "<b>[ 탐험 랜턴 미션 ]</b><br>손전등을 꾹 눌러 숨어있는 유령을 찾아<br>빛의 중심에 모아보세요!";
             // 🌟 인트로 배경 유령 연출
             for (let i = 0; i < 5; i++) {
                 const g = document.createElement('div');
@@ -132,7 +132,7 @@ function showIntroGuide(type) {
             break;
         case 'gem':
             icon = "💎";
-            guide = "<b>[ 보물 원석 미션 ]</b><br>1단계: 바위를 연타해 부수세요!<br>2단계: 스마트폰을 흔들어 먼지를 터세요!";
+            guide = "<b>[ 보물 원석 미션 ]</b><br>1단계: 바위를 연타해 부수세요!<br>2단계: 좌우로 비비거나 흔들어서 먼지를 터세요!";
             break;
     }
 

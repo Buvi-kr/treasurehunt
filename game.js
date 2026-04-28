@@ -439,14 +439,18 @@ function playSimon(win, lose) {
     const generateSequence = () => {
         if (!isAlive()) return;
         const round = sequence.length + 1;
-        sequence = [];
-        let last = -1;
-        for(let i=0; i<round; i++) {
-            let next;
-            do { next = Math.floor(Math.random() * 9); } while (next === last);
-            sequence.push(next);
-            last = next;
-        }
+        
+        // 🌟 고정된 시퀀스 적용 (5 / 2,8 / 9,4,3 / 7,2,8,4)
+        // 인덱스 기준: 5->4, 2->1, 8->7, 9->8, 4->3, 3->2, 7->6
+        const fixedSequences = [
+            [4],             // 1단계: 5
+            [1, 7],          // 2단계: 2, 8
+            [8, 3, 2],       // 3단계: 9, 4, 3
+            [6, 1, 7, 3]     // 4단계: 7, 2, 8, 4
+        ];
+        
+        sequence = fixedSequences[round - 1] || [];
+        
         elements.score.textContent = `단계: ${round}/4`;
         showSequence();
     };

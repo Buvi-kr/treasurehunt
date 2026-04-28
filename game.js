@@ -689,7 +689,7 @@ function playMash(win, lose, myId) {
     if (elements.desc) elements.desc.textContent = "바위를 연타해 부수세요!";
     elements.container.insertAdjacentHTML('beforeend', `<div class="track-gauge-bg"><div id="m-hp" class="track-gauge-fill" style="background: linear-gradient(90deg, #ef4444, #f4a940); width:100%;"></div></div>
                                     <div class="dust-layer" id="m-dust"></div>
-                                    <div class="shake-msg" id="m-msg">📱 스마트폰을 마구 흔들어<br>먼지를 터세요!</div>
+                                    <div class="shake-msg" id="m-msg">📱 스마트폰을 흔들거나<br>화면을 비벼서 먼지를 터세요!</div>
                                     <div class="rock-wrap" id="m-wrap">
                                         <div id="m-gem" class="mash-gem">💎</div>
                                         <div id="m-rock" class="mash-rock">🪨</div>
@@ -747,7 +747,7 @@ function playMash(win, lose, myId) {
                 if (rock) rock.style.display = 'none';
                 if (dustLayer) dustLayer.style.opacity = '1';
                 if (msg) msg.style.display = 'block';
-                if (elements.desc) elements.desc.textContent = "먼지를 마구 흔들어 터세요!";
+                if (elements.desc) elements.desc.textContent = "먼지를 흔들거나 비벼서 터세요!";
                 if (hpBar) {
                     hpBar.style.width = '100%';
                     hpBar.style.background = '#a9a9a9';

@@ -76,12 +76,14 @@
 }
 
 .mg-intro-content {
-    padding: 20px;
+    padding: 10px 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
+    width: 90%;
+    height: 90%;
 }
 
 .result-msg {

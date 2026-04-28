@@ -317,13 +317,12 @@ function playCatch(win, lose, myId) {
     const isAlive = () => currentMgId === myId && elements.container.querySelector('#c-player');
     
     elements.title.textContent = "탐험 도구 캐치"; 
-    if (elements.desc) elements.desc.textContent = "도구를 10개 담으세요! 💣피하기";
+    if (elements.desc) elements.desc.textContent = "가방을 드래그하여 도구를 10개 담으세요!";
     
-    // Clear any existing player first (extra safety)
     const existingPlayer = document.getElementById('c-player');
     if (existingPlayer) existingPlayer.remove();
     
-    elements.container.insertAdjacentHTML('beforeend', `<div id="c-player" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:45px; z-index:10; transition: left 0.1s ease-out; pointer-events: none;">🎒</div>`);
+    elements.container.insertAdjacentHTML('beforeend', `<div id="c-player" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:45px; z-index:10; transition: none; cursor: grab;">🎒</div>`);
     updateLives(); 
     let score = 0; 
     let items = []; 
@@ -331,21 +330,52 @@ function playCatch(win, lose, myId) {
     const toolEmojis = ['🧭', '🗺️', '💧', '🔦', '🍞']; 
     elements.score.textContent = `캐치: 0/10`;
 
-    const moveHandler = (e) => {
+    let isDragging = false;
+    let startX = 0;
+    let playerStartX = 0;
+
+    const startDrag = (e) => {
         if (!isAlive()) return;
+        isDragging = true;
+        const pos = getEventPos(e, elements.container);
+        startX = pos.x;
+        playerStartX = player.offsetLeft;
+        player.style.cursor = 'grabbing';
+    };
+
+    const moveHandler = (e) => {
+        if (!isAlive() || !isDragging) return;
         e.preventDefault();
         const pos = getEventPos(e, elements.container);
-        if (player) {
-            player.style.left = Math.max(25, Math.min(elements.container.offsetWidth - 25, pos.x)) + 'px';
-        }
+        const dx = pos.x - startX;
+        let newX = playerStartX + dx;
+        
+        // 범위 제한
+        newX = Math.max(25, Math.min(elements.container.offsetWidth - 25, newX));
+        player.style.left = newX + 'px';
+        player.style.transform = 'translateX(-50%)'; // 유지
     };
-    
-    elements.container.onmousemove = elements.container.ontouchmove = moveHandler;
+
+    const endDrag = () => {
+        isDragging = false;
+        if (player) player.style.cursor = 'grab';
+    };
+
+    // 가방에 직접 이벤트 걸거나 컨테이너에서 처리
+    player.onmousedown = player.ontouchstart = startDrag;
+    window.addEventListener('mousemove', moveHandler);
+    window.addEventListener('touchmove', moveHandler, {passive:false});
+    window.addEventListener('mouseup', endDrag);
+    window.addEventListener('touchend', endDrag);
 
     let speed = 3.5;
     mgInterval = setInterval(() => {
         if (!isAlive()) {
             clearInterval(mgInterval);
+            window.removeEventListener('mousemove', moveHandler);
+            window.removeEventListener('touchmove', moveHandler);
+            window.removeEventListener('mouseup', endDrag);
+            window.removeEventListener('touchend', endDrag);
             return;
         }
         
@@ -534,31 +564,64 @@ function playSimon(win, lose, myId) {
 function playSpotlight(win, lose, myId) {
     const isAlive = () => currentMgId === myId && document.getElementById('sl-target');
     elements.title.textContent = "어둠 속 추적"; 
-    if (elements.desc) elements.desc.textContent = "중심에 유령을 1초간 맞추세요!";
+    if (elements.desc) elements.desc.textContent = "손전등을 드래그해 유령을 찾으세요!";
     elements.container.insertAdjacentHTML('beforeend', `<div class="track-gauge-bg"><div id="sl-gauge" class="track-gauge-fill"></div></div>
                                     <div id="sl-bg" style="width:100%; height:100%; background: #000;"></div>
-                                    <div id="sl-target" style="position:absolute; font-size:38px; opacity:0; z-index:103; filter: drop-shadow(0 0 10px rgba(255,255,255,0.4));">👻</div>`);
+                                    <div id="sl-target" style="position:absolute; font-size:38px; opacity:0; z-index:103; filter: drop-shadow(0 0 10px rgba(255,255,255,0.4));">👻</div>
+                                    <div id="sl-handle" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:40px; z-index:110; cursor:grab; filter: drop-shadow(0 0 5px #fff);">🔦</div>`);
+    
     const bg = document.getElementById('sl-bg'); 
     const target = document.getElementById('sl-target'); 
     const gaugeFill = document.getElementById('sl-gauge');
+    const handle = document.getElementById('sl-handle');
     
     let stage = 1; 
     elements.score.textContent = `단계: 1/3`;
     let ghost = { x: 50, y: 50, vx: 1.2, vy: 1.2 }; 
-    let light = { x: -150, y: -150 }; 
+    let light = { x: elements.container.offsetWidth/2, y: elements.container.offsetHeight/2 }; 
     let trackTime = 0; 
+    let isDragging = false;
+
+    // 초기 조명 상태 설정
+    if (bg) bg.style.background = `radial-gradient(circle at ${light.x}px ${light.y}px, transparent 0px, transparent 35px, rgba(0,0,0,0.6) 55px, rgba(0,0,0,0.9) 110px, #000 130px)`;
+
+    const startDrag = (e) => {
+        if (!isAlive()) return;
+        isDragging = true;
+        if (handle) handle.style.cursor = 'grabbing';
+    };
 
     const moveLight = (e) => {
-        if (!isAlive()) return;
+        if (!isAlive() || !isDragging) return;
         e.preventDefault(); 
         light = getEventPos(e, elements.container);
         if (bg) bg.style.background = `radial-gradient(circle at ${light.x}px ${light.y}px, transparent 0px, transparent 35px, rgba(0,0,0,0.6) 55px, rgba(0,0,0,0.9) 110px, #000 130px)`;
+        if (handle) {
+            handle.style.left = light.x + 'px';
+            handle.style.top = light.y + 'px';
+        }
     };
-    elements.container.onmousemove = elements.container.ontouchmove = moveLight;
+
+    const endDrag = () => {
+        isDragging = false;
+        if (handle) handle.style.cursor = 'grab';
+    };
+
+    handle.onmousedown = handle.ontouchstart = startDrag;
+    window.addEventListener('mousemove', moveLight);
+    window.addEventListener('touchmove', moveLight, {passive:false});
+    window.addEventListener('mouseup', endDrag);
+    window.addEventListener('touchend', endDrag);
 
     let lastTime = performance.now();
     const loop = (now) => {
-        if (!isAlive()) return;
+        if (!isAlive()) {
+            window.removeEventListener('mousemove', moveLight);
+            window.removeEventListener('touchmove', moveLight);
+            window.removeEventListener('mouseup', endDrag);
+            window.removeEventListener('touchend', endDrag);
+            return;
+        }
         const dt = now - lastTime; 
         lastTime = now;
         
